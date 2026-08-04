@@ -16,13 +16,15 @@ Recommended submission order is CTIRP, PCL, then SND. The first two are the high
 
 ## Common Submission Contract
 
-Every problem folder contains:
+Every problem folder now contains exactly five files:
 
-1. `business_description.md` and `.docx` — canonical text plus the Form-ready business-level-description upload;
-2. a concise LaTeX document — title, precise statement, formulation, evidence, and sources;
-3. an upload-ready executable reference solver and exact checker;
-4. machine-readable instance or evidence files where redistribution is permitted;
-5. exact evaluation prompts, screened executable output, a cleaned execution record, and a problem-level README.
+1. `README.md` — the compact navigation, evidence, source, and command record;
+2. `business_description.docx` — the Form-ready business-level-description upload;
+3. `instance.csv` — the associated data and provenance;
+4. one Python solver — the reference formulation and its built-in verification;
+5. one LaTeX source — the editable precise problem document.
+
+Compiled PDFs are kept together in `output/pdf/`, outside the problem folders. Detailed screening prompts, raw generated programs, execution logs, and superseded checkers are preserved in the local research archive instead of cluttering the submission packages.
 
 The TeX documents share [`latex/orbenchcompact.sty`](latex/orbenchcompact.sty): a neutral 10-point academic layout with compact spacing, restrained rules, readable mathematics, and no borrowed publisher branding or class code.
 
@@ -51,30 +53,26 @@ Individual targets are `pdf-snd`, `pdf-ctirp`, and `pdf-pcl`. Finished PDFs are 
 
 ## Verify the Exact Certificates
 
-The three mechanical checkers use only the Python standard library:
+Each solver has one `--verify` command that checks both the reference formulation and its compact failure certificate:
 
 ```bash
-python3 problems/01_cyclic_crossdock_service_network_design/check_cyclic_crossdock_snd.py
-python3 problems/02_event_ordered_continuous_time_replenishment/check_false_feasible.py
-python3 problems/03_pcl_assortment/check_assortment.py 2 3 5 6
-```
-
-The three reference formulations require Python, Gurobi, and `gurobipy`:
-
-```bash
-python3 problems/01_cyclic_crossdock_service_network_design/solve_cyclic_crossdock_snd.py
+python3 problems/01_cyclic_crossdock_service_network_design/solve_cyclic_crossdock_snd.py --verify
 python3 problems/02_event_ordered_continuous_time_replenishment/solve_ctirp_submission.py \
-  problems/02_event_ordered_continuous_time_replenishment/instance.csv
-python3 problems/03_pcl_assortment/solve_pcl_structured.py
+  problems/02_event_ordered_continuous_time_replenishment/instance.csv --verify
+python3 problems/03_pcl_assortment/solve_pcl_structured.py --verify
 ```
+
+The solvers require Python, Gurobi, and `gurobipy`.
 
 ## Evidence Standard
 
-A candidate enters this repository only when the intended model has an independent oracle and the generated-model error has an objective gap or feasibility witness. A solver status alone is not treated as evidence of correctness.
+A candidate enters this repository only when the intended model has an exact reproducible certificate and the generated-model error has an objective gap or feasibility witness. A solver status alone is not treated as evidence of correctness.
 
-- The SND checker independently generates time-feasible shipment paths, enumerates all 256 service-leg designs, and verifies five structural cases (the correct model plus four ablations).
-- The replenishment witness proves reference infeasibility analytically while the generated formulation reports an optimum.
-- The PCL instance is exhaustively enumerable: 57 feasible assortments, one unique optimum, and direct probability recomputation.
+- The SND solver verifies the correct model plus four structural ablations, including handling-time and fleet-count failures.
+- The replenishment solver proves reference infeasibility analytically: all visits occur at time 5, while required delivery exceeds safe capacity.
+- The PCL solver enumerates all 57 feasible assortments, proves a unique optimum, and directly recomputes the failed selection.
+
+The public README and precise PDF retain the decision-relevant failure evidence. Raw model-screening artifacts remain available in the local archive and prior Git history for audit.
 
 All three associated-data files use the CSV format requested by the official call.
 

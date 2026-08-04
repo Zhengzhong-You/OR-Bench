@@ -3,8 +3,10 @@
 
 from __future__ import annotations
 
+import argparse
 import csv
 import math
+from itertools import combinations
 from pathlib import Path
 
 import gurobipy as gp
@@ -69,6 +71,13 @@ def pcl_metrics(
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--verify",
+        action="store_true",
+        help="enumerate all feasible assortments and verify the failure witness",
+    )
+    args = parser.parse_args()
     data = load_data()
     products = tuple(row["id"] for row in data["products"])
     attraction = {row["id"]: row["attraction"] for row in data["products"]}
@@ -171,6 +180,34 @@ def main() -> None:
     print(f"P(OUTSIDE)={outside_probability:.15f}")
     print(f"DIRECT_OBJECTIVE={direct:.15f}")
     print(f"RECOMPUTE_DIFF={abs(model.ObjVal - direct):.3e}")
+
+    if args.verify:
+        feasible = [
+            assortment
+            for size in range(data["max_products"] + 1)
+            for assortment in combinations(products, size)
+        ]
+        ranked = sorted(
+            (
+                (pcl_metrics(frozenset(assortment), data)[0], assortment)
+                for assortment in feasible
+            ),
+            reverse=True,
+        )
+        optimum, optimal = ranked[0]
+        failed_assortment = (2, 3, 5, 6)
+        failed_value = pcl_metrics(frozenset(failed_assortment), data)[0]
+        relative_regret = (optimum - failed_value) / optimum
+        assert len(feasible) == 57
+        assert optimal == (3, 5, 6)
+        assert optimum > ranked[1][0] + 1e-12
+        assert math.isclose(optimum, 0.323647238294198, abs_tol=1e-12)
+        assert math.isclose(failed_value, 0.285975423739680, abs_tol=1e-12)
+        assert math.isclose(relative_regret, 0.116397763, abs_tol=1e-9)
+        print(f"FAILED_ASSORTMENT={failed_assortment}")
+        print(f"FAILED_TRUE_OBJECTIVE={failed_value:.15f}")
+        print(f"RELATIVE_REGRET={relative_regret:.9%}")
+        print("VERIFICATION=PASS")
 
 
 if __name__ == "__main__":

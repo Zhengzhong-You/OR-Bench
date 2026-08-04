@@ -150,12 +150,43 @@ def main() -> None:
     parser.add_argument("--omit-handling", action="store_true")
     parser.add_argument("--omit-asset-circulation", action="store_true")
     parser.add_argument("--omit-fleet-limit", action="store_true")
-    args = parser.parse_args()
-    solve(
-        omit_handling=args.omit_handling,
-        omit_asset_circulation=args.omit_asset_circulation,
-        omit_fleet_limit=args.omit_fleet_limit,
+    parser.add_argument(
+        "--verify",
+        action="store_true",
+        help="solve the reference case and four diagnostic ablations",
     )
+    args = parser.parse_args()
+    if not args.verify:
+        solve(
+            omit_handling=args.omit_handling,
+            omit_asset_circulation=args.omit_asset_circulation,
+            omit_fleet_limit=args.omit_fleet_limit,
+        )
+        return
+
+    expected = {
+        "correct_model": ((False, False, False), 15.0, "direct", ["F4", "R4"], 1),
+        "omit_handling": (
+            (True, False, False), 8.0, "zero_handling_relaxation_only",
+            ["F1", "F2", "R1", "R2"], 2,
+        ),
+        "omit_fleet_limit": (
+            (False, False, True), 11.5, "direct", ["F4", "R1", "R2"], 3,
+        ),
+        "omit_all_assets": ((False, True, True), 7.5, "direct", ["F4"], None),
+        "omit_handling_and_assets": (
+            (True, True, True), 4.0, "zero_handling_relaxation_only",
+            ["F1", "F2"], None,
+        ),
+    }
+    for name, (flags, objective, path, legs, tractors) in expected.items():
+        result = solve(*flags)
+        assert abs(result["objective"] - objective) <= 1e-9, name
+        assert result["cargo_path"] == path, name
+        assert result["opened_legs"] == legs, name
+        if tractors is not None:
+            assert abs(result["minimum_tractors"] - tractors) <= 1e-9, name
+    print("VERIFICATION=PASS")
 
 
 if __name__ == "__main__":

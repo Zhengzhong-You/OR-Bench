@@ -521,6 +521,11 @@ def main() -> int:
     parser.add_argument("--no-min-visit-tightening", action="store_true")
     parser.add_argument("--gurobi-log", action="store_true")
     parser.add_argument("--output", type=Path, default=None)
+    parser.add_argument(
+        "--verify",
+        action="store_true",
+        help="check the analytic infeasibility certificate after solving",
+    )
     args = parser.parse_args()
 
     instance = parse_instance(args.instance)
@@ -547,11 +552,43 @@ def main() -> int:
         "used_visits": solution.used_visits,
         "selected_arcs": solution.arcs,
     }
+    if args.verify:
+        if len(instance.customers) != 1:
+            raise AssertionError("The bundled certificate expects one customer")
+        customer = instance.customers[0]
+        earliest_arrival = instance.travel_time[0][customer.id]
+        latest_arrival = instance.horizon - instance.travel_time[customer.id][0]
+        inventory_before = (
+            customer.initial_inventory - customer.usage_rate * earliest_arrival
+        )
+        required_delivery = (
+            customer.final_inventory
+            + customer.usage_rate * instance.horizon
+            - customer.initial_inventory
+        )
+        maximum_safe_delivery = customer.max_inventory - inventory_before
+        certificate = {
+            "earliest_arrival": earliest_arrival,
+            "latest_arrival": latest_arrival,
+            "inventory_before": inventory_before,
+            "required_delivery": required_delivery,
+            "maximum_safe_delivery": maximum_safe_delivery,
+            "passed": (
+                earliest_arrival == latest_arrival
+                and required_delivery > maximum_safe_delivery
+                and solution.status_name == "INFEASIBLE"
+            ),
+        }
+        if not certificate["passed"]:
+            raise AssertionError(f"Certificate failed: {certificate}")
+        payload["verification"] = certificate
     text = json.dumps(payload, indent=2, ensure_ascii=False)
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(text + "\n", encoding="utf-8")
     print(text)
+    if args.verify:
+        print("VERIFICATION=PASS")
     return 0 if solution.status_name in {"OPTIMAL", "INFEASIBLE"} else 2
 
 
