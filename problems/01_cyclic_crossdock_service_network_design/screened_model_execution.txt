@@ -1,0 +1,54 @@
+Screened model execution record
+===============================
+
+Canonical inputs
+----------------
+System prompt: evaluation_system_prompt.md
+User prompt: evaluation_prompt.md
+
+Run A — GPT-5.4 full generated model
+------------------------------------
+Program: screened_model_output_gpt54_low.py
+Response: resp_01abbbdf4b5cccc1006a72336e8d7481979bead56f04c4af68
+Generation: gpt-5.4-2026-03-05; low reasoning; 2026-08-04T18:46:06Z
+Command: python3 screened_model_output_gpt54_low.py
+Recorded and clean-reexecution status: INFEASIBLE; exit status 0
+
+Independent certificate: the generated ship_balance gives +1 at O0 and -1
+at each of D2 and D3. Its equalities require one unit of source supply to
+satisfy two units of sink demand. The stated problem is feasible: open F4
+and R4, send the load on F4, use one tractor, objective 15.
+
+Run B — GPT-5-mini first replication
+--------------------------------------
+Program: screened_model_output.py
+Response: resp_07808559fdab8aec006a722c7df3dc81949171b83a0fd57786
+Generation: gpt-5-mini-2025-08-07; high reasoning; 2026-08-04T18:16:29Z
+Command: python3 screened_model_output.py
+Status: OPTIMAL; objective and bound 11.5; gap 0; exit status 0
+Decision: shipment F4; opened R1,R2,F4; reports one physical tractor.
+
+Run C — GPT-5-mini independent replication
+--------------------------------------------
+Program: screened_model_output_mini_repeat.py
+Response: resp_0bece88f107c38e3006a722e2529888193a4e27ca39d07113b
+Generation: gpt-5-mini-2025-08-07; high reasoning; 2026-08-04T18:23:33Z
+Command: python3 screened_model_output_mini_repeat.py
+Recorded and clean-reexecution status: OPTIMAL; objective and bound 11.5;
+gap 0; exit status 0
+Decision: shipment F4; opened R1,R2,F4; reports two rotations, including
+an empty waiting-only rotation.
+
+Independent fleet certificate for Runs B and C
+------------------------------------------------
+The productive closed walk contains F4 (3 slots), three one-slot D waits,
+R2 (3 slots), and R1 (3 slots), totaling 12 tractor-slots. With a four-slot
+weekly period, maintaining the listed weekly departures requires 12 / 4 = 3
+staggered tractors. Only 2 are available, so the 11.5 decision is infeasible.
+The exact optimum is 15.
+
+Verification environment
+------------------------
+Original recorded environment: Python 3.11; Gurobi 11.0.3; macOS arm64.
+Clean reexecution: Python 3.13; gurobipy/Gurobi 13.0.2; macOS arm64;
+2026-08-04. All three programs exited normally with the outcomes above.

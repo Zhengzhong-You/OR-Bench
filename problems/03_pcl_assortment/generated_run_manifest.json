@@ -1,0 +1,61 @@
+{
+  "problem": "pcl_assortment_six_product",
+  "prompt_sha256": {
+    "system": "99e4849ce5ff15d27786ebb9f9dfeaf617338168afe1de8fda8250bcdeeac44f",
+    "user": "3a3faac576961cc9d08e8d3352fc0fedb516bface4d260718742d60a1d40bb15"
+  },
+  "runs": [
+    {
+      "model": "gpt-5.6-luna",
+      "response_id": "resp_02a9bdb2992b0aaf006a72085f4bc481979d82846d4f8d2008",
+      "reasoning_effort": "high",
+      "verbosity": "medium",
+      "created_utc": "2026-08-04T15:42:23Z",
+      "status": "completed",
+      "public_code": "screened_model_output_luna.py",
+      "command": "python3 screened_model_output_luna.py",
+      "executed_result": {"status": "OPTIMAL", "objective": 0.24565816094, "bound": 0.24565816094, "gap": 0.0, "selected_products": [2, 3, 5, 6]},
+      "usage": {
+        "input_tokens": 605,
+        "output_tokens": 11577,
+        "reasoning_tokens": 9203,
+        "total_tokens": 12182
+      },
+      "sha256": {
+        "raw_response_internal": "ab47d6246432c4a8f2d1fd9ff9740b31a134ad24e4545bf7d3934e5fc1038573",
+        "answer": "0852bca55f04a5baf1340b40fcbcf2db599fe9c1533d905193b3d9e205f5c0f9",
+        "extracted_code": "86ab22922af0f5b302ac959caaacb2d72ec0c3f5aa48e5d0dfc9035a0a1448dd"
+      }
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "response_id": "resp_00c1beb391cfbceb006a7208efc90c8197990036c2dad57584",
+      "reasoning_effort": "high",
+      "verbosity": "medium",
+      "created_utc": "2026-08-04T15:44:47Z",
+      "status": "completed",
+      "public_code": "screened_model_output_sol.py",
+      "command": "python3 screened_model_output_sol.py",
+      "executed_result": {"status": "OPTIMAL", "objective": 0.18896182676, "bound": 0.18896182676, "gap": 0.0, "selected_products": [2, 3, 5, 6]},
+      "usage": {
+        "input_tokens": 605,
+        "output_tokens": 8104,
+        "reasoning_tokens": 5696,
+        "total_tokens": 8709
+      },
+      "sha256": {
+        "raw_response_internal": "350ddfed56e92fc0782f2a1b1df3f652d8c4d22bd8415fa5b569d220cfb56aab",
+        "answer": "2c5efaa9fd3166c1eb57eb305e22bbac44e8679225b0cf484e7a541bedf36570",
+        "extracted_code": "9f3bc310bca50d0f8468e768276e8ff2fbf3fa900442bf7a454899967ce30281"
+      }
+    }
+  ],
+  "cleaned_execution_sha256": "605b1d23b110cf3466a58de3b32c7c1276f6a4b8c537676b1c40c97959c900d2",
+  "public_artifacts": {
+    "system_prompt": "evaluation_system_prompt.md",
+    "user_prompt": "evaluation_prompt.md",
+    "extracted_code": ["screened_model_output_luna.py", "screened_model_output_sol.py"],
+    "execution": "screened_model_execution.txt"
+  },
+  "note": "Raw API envelopes and chain-of-thought are not published. Exact prompts, extracted programs, execution summary, response identifiers, and hashes are public."
+}

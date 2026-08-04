@@ -1,0 +1,27 @@
+{
+  "candidate": "Limited-Display PCL Assortment Planning",
+  "feasible_assortments": 57,
+  "ground_truth": {
+    "unique_optimum": [3, 5, 6],
+    "objective": 0.323647238294198
+  },
+  "model_runs": [
+    {
+      "model": "gpt-5.6-luna",
+      "error": "one global singleton contribution per selected product instead of one exactly-one-offered contribution for every absent counterpart",
+      "selected_products": [2, 3, 5, 6],
+      "wrong_model_objective": 0.24565816094
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "error": "pair nests retained only when both products are offered",
+      "selected_products": [2, 3, 5, 6],
+      "wrong_model_objective": 0.18896182676
+    }
+  ],
+  "correct_evaluation_of_model_selection": {
+    "selected_products": [2, 3, 5, 6],
+    "objective": 0.28597542373968,
+    "relative_regret": 0.11639776
+  }
+}

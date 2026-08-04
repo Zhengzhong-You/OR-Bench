@@ -1,0 +1,3 @@
+# Event-Ordered Continuous-Time Tank Replenishment
+
+We plan replenishment routes for industrial gas, fuel, or liquid raw material that customers consume continuously. Each customer has an on-site tank: too little inventory interrupts operations, while too much exceeds physical capacity. Every customer must also retain a required reserve at the end of the planning horizon. Vehicles may leave the warehouse and return to reload. Decide when vehicles depart, which customers they visit, and how much they deliver at every visit. Some customers may require multiple deliveries. Minimize travel cost while preventing stockouts and overflow throughout the day.

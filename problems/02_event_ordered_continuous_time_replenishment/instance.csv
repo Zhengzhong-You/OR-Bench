@@ -1,0 +1,8 @@
+record_type,id,from_node,to_node,horizon,vehicle_count,vehicle_capacity,initial_inventory,terminal_requirement,lower_inventory,upper_inventory,usage_rate,travel_time,travel_cost,text
+instance,OR_BENCH_CTIRP_WITNESS,,,10,4,5,,,,,,,,Original synthetic one-customer false-feasibility witness
+customer,1,,,,,,90,100,0,100,1,,,
+arc,,0,0,,,,,,,,,0,0,
+arc,,0,1,,,,,,,,,5,1,
+arc,,1,0,,,,,,,,,5,1,
+arc,,1,1,,,,,,,,,0,0,
+rights,,,,,,,,,,,,,,"Original synthetic data; not copied or derived from a benchmark. Statement and data: CC BY 4.0; code: MIT."

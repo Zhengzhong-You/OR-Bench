@@ -1,0 +1,53 @@
+.DS_Store
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# LaTeX build outputs
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.run.xml
+*.synctex.gz
+*.toc
+
+# Local research archive; the public repository contains only submission packages.
+artifacts/
+docs/
+experiments/
+paper/
+references/
+tmp/
+
+# Internal model-call and answer-audit utilities.
+scripts/call_openai_true_vague.py
+scripts/evaluate_ctirp_llm_answer.py
+scripts/run_2e_cvrp_llm_route_enum_adapter.py
+
+# Screened controls and superseded candidates retained only for internal audit.
+problems/01_shared_fleet_two_echelon_routing/
+problems/01_executable_learning_project_schedule/
+problems/01_rank_weighted_facility_location/
+problems/01_shared_service_road_solar_layout/
+problems/01_travel_time_cascade_hydropower/
+src/or_bench/two_echelon_cvrp/
+scripts/solve_2e_cvrp.py
+scripts/run_2e_cvrp_table3_check.py
+output/pdf/shared_fleet_two_echelon_routing.pdf
+
+# Superseded modular CTIRP implementation; the public package uses one upload-ready solver.
+scripts/solve_ctirp.py
+src/or_bench/
+
+# Local notes
+local/
+scratch/

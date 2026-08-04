@@ -1,0 +1,2 @@
+# The CTIRP prompt preserves the exact bytes used by the recorded model run.
+problems/02_event_ordered_continuous_time_replenishment/evaluation_system_prompt.md whitespace=-blank-at-eof

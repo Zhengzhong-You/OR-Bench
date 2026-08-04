@@ -1,0 +1,71 @@
+{
+  "purpose": "Public provenance for three execution-confirmed formulation failures on one canonical business prompt",
+  "canonical_inputs": {
+    "system_prompt": "evaluation_system_prompt.md",
+    "system_prompt_sha256": "99e4849ce5ff15d27786ebb9f9dfeaf617338168afe1de8fda8250bcdeeac44f",
+    "user_prompt": "evaluation_prompt.md",
+    "user_prompt_sha256": "0e537f1658b1a74f17a78c2edca560d928121e9cb4e39c8ed5dc44a61644ede2"
+  },
+  "runs": [
+    {
+      "response_id": "resp_01abbbdf4b5cccc1006a72336e8d7481979bead56f04c4af68",
+      "model": "gpt-5.4-2026-03-05",
+      "created_utc": "2026-08-04T18:46:06Z",
+      "reasoning_effort": "low",
+      "usage": {"input_tokens": 584, "output_tokens": 5558, "reasoning_tokens": 2635, "total_tokens": 6142},
+      "public_code": "screened_model_output_gpt54_low.py",
+      "public_code_sha256": "adda3bad2b5776f748eeaab2a4b2f1dfc3b9f10ee1611687f576bdd39ab1b53a",
+      "answer_sha256": "a3c20bc49c1e0dd139228b3bfb29749515731ac01282c84e58fc5574c3288b0a",
+      "raw_response_internal_sha256": "a0cc6b5897f030d6435eb195d562969b2253f58ccc3d335a4d681893f1b73c1c",
+      "executed_status": "INFEASIBLE",
+      "classification": "formulation_failure",
+      "certificate": "The generated shipment balances impose source supply 1 but destination demand 2; F4,R4 is an explicit feasible design of value 15."
+    },
+    {
+      "response_id": "resp_07808559fdab8aec006a722c7df3dc81949171b83a0fd57786",
+      "model": "gpt-5-mini-2025-08-07",
+      "created_utc": "2026-08-04T18:16:29Z",
+      "reasoning_effort": "high",
+      "usage": {"input_tokens": 584, "output_tokens": 17250, "reasoning_tokens": 13888, "total_tokens": 17834},
+      "public_code": "screened_model_output.py",
+      "public_code_sha256": "c6baddff6cc277a962fa6a4d2095b1ec4b31f5cc0c7ca4d3229c135e298b9899",
+      "answer_sha256": "dbf7602640791bf5257cd97dfab21f20f5d1f9a0bc972ea3ee20190cf9e9184b",
+      "raw_response_internal_sha256": "8132b5cb4d9178a9f262339d4747247e404d736554931d191feed8808d0356ad",
+      "executed_status": "OPTIMAL",
+      "executed_objective": 11.5,
+      "executed_bound": 11.5,
+      "executed_gap": 0.0,
+      "classification": "formulation_failure",
+      "certificate": "The chosen 12-slot periodic walk needs three staggered tractors but the fleet limit is two."
+    },
+    {
+      "response_id": "resp_0bece88f107c38e3006a722e2529888193a4e27ca39d07113b",
+      "model": "gpt-5-mini-2025-08-07",
+      "created_utc": "2026-08-04T18:23:33Z",
+      "reasoning_effort": "high",
+      "usage": {"input_tokens": 584, "output_tokens": 20677, "reasoning_tokens": 16640, "total_tokens": 21261},
+      "public_code": "screened_model_output_mini_repeat.py",
+      "public_code_sha256": "7ff5eae98b29d32f45faa09a2614d7dd2168e076dad90978426e09d6d659ce7e",
+      "answer_sha256": "48efb5430208b52b268bc0e04311e7fff3ee59e1ec971d77768c8fb85ef45453",
+      "raw_response_internal_sha256": "6776e9afcbbaa53829363e2d7824de393e66f67b8a7fa7d93db6a438a4e509ca",
+      "executed_status": "OPTIMAL",
+      "executed_objective": 11.5,
+      "executed_bound": 11.5,
+      "executed_gap": 0.0,
+      "classification": "formulation_failure",
+      "certificate": "The generated fleet count omits the elapsed-time winding of cross-week service legs."
+    }
+  ],
+  "execution_record": "screened_model_execution.txt",
+  "execution_record_sha256": "8454b0c9133887011896a886095af795d47b006ed44c41565dcd65a6cba24652",
+  "verification_environments": [
+    "Original records: Python 3.11, Gurobi 11.0.3, macOS arm64",
+    "Clean reexecution: Python 3.13, Gurobi 13.0.2, macOS arm64, 2026-08-04"
+  ],
+  "correct_high_reasoning_controls": [
+    {"model": "gpt-5.4-2026-03-05", "response_id": "resp_018881a2efc31e40006a722c56a2688195bf1d428d423fbfe2", "objective": 15.0},
+    {"model": "gpt-5.5-2026-04-23", "response_id": "resp_06d7ff5effd19d6a006a722c5715a481958abc9f8a38a555a3", "objective": 15.0},
+    {"model": "gpt-5.6-luna", "response_id": "resp_011d329b011f6f6f006a722c5ab9f88194901b4fbcf0b6e5be", "objective": 15.0}
+  ],
+  "note": "Raw API envelopes and chain-of-thought are not published. Exact prompts, extracted executable programs, response identifiers, content hashes, cleaned outcomes, and independent certificates are public."
+}

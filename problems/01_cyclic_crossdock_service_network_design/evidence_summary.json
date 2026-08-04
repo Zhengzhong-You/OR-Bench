@@ -1,0 +1,49 @@
+{
+  "candidate": "Cyclic Freight Service Design with Cross-Dock Handling",
+  "full_model_failure": {
+    "model_observed": "gpt-5.4-2026-03-05",
+    "reasoning_effort": "low",
+    "run_utc": "2026-08-04T18:46:06Z",
+    "response_id": "resp_01abbbdf4b5cccc1006a72336e8d7481979bead56f04c4af68",
+    "generated_status": "INFEASIBLE",
+    "reference_status": "OPTIMAL",
+    "reference_feasible_design": ["F4", "R4"],
+    "reference_objective": 15.0,
+    "error": "Shipment balance assigns supply +1 at O0 but demand -1 at both D2 and D3, requiring two sink units for one load."
+  },
+  "mini_first_failure": {
+    "model_requested": "gpt-5-mini",
+    "model_observed": "gpt-5-mini-2025-08-07",
+    "reasoning_effort": "high",
+    "run_utc": "2026-08-04T18:16:29Z",
+    "response_id": "resp_07808559fdab8aec006a722c7df3dc81949171b83a0fd57786",
+    "generated_status": "OPTIMAL",
+    "generated_objective": 11.5,
+    "generated_path": ["F4"],
+    "generated_opened_legs": ["F4", "R1", "R2"],
+    "generated_reported_tractors": 1,
+    "minimum_required_tractors": 3,
+    "available_tractors": 2,
+    "error": "The formulation imposes binary flow conservation for each named tractor on a modulo-week graph but does not preserve elapsed time or connected physical routes. It treats a 12-slot winding cycle as one weekly tractor rotation."
+  },
+  "reference": {
+    "status": "OPTIMAL",
+    "objective": 15.0,
+    "path": ["F4"],
+    "opened_legs": ["F4", "R4"],
+    "minimum_tractors": 1,
+    "absolute_gap": 3.5,
+    "relative_underestimate_percent": 23.333333333333332
+  },
+  "replication": {
+    "response_id": "resp_0bece88f107c38e3006a722e2529888193a4e27ca39d07113b",
+    "model_observed": "gpt-5-mini-2025-08-07",
+    "reasoning_effort": "high",
+    "run_utc": "2026-08-04T18:23:33Z",
+    "generated_status": "OPTIMAL",
+    "generated_objective": 11.5,
+    "generated_opened_legs": ["F4", "R1", "R2"],
+    "error": "Counts tractors from arcs whose tail is slot 3, omitting long service arcs that cross the weekly boundary."
+  },
+  "scope_note": "One gpt-5.4 low-reasoning run and two independent gpt-5-mini high-reasoning runs fail through two distinct formulation errors. The same final prompt was modeled correctly in high-reasoning runs of gpt-5.4-2026-03-05, gpt-5.5-2026-04-23, and gpt-5.6-luna."
+}

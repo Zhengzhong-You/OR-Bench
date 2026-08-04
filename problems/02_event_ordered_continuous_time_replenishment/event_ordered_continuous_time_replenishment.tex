@@ -1,0 +1,109 @@
+\documentclass[10pt]{article}
+\usepackage{orbenchcompact}
+
+\title{Event-Ordered Continuous-Time Tank Replenishment}
+\author{Zhengzhong You}
+\date{OR-Bench candidate problem \textbullet{} August 2026}
+\shorttitle{Event-Ordered Continuous-Time Replenishment}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Replenishment plans for fuel, industrial gas, and liquid raw materials must coordinate vehicle routes with inventories that evolve continuously. Repeated visits create the decisive modeling challenge: every delivery must occupy one consistent event order, because tank feasibility depends on the exact set of earlier deliveries. This candidate uses an event-copy MILP and a one-customer analytical witness. A generated continuous-time formulation includes routes, arrival times, quantities, and inventory checks, yet its pairwise precedence variables admit incompatible delivery orders. The model declares four simultaneous deliveries feasible even though their aggregate raises inventory to 105 in a tank capped at 100.
+\end{abstract}
+\keywords{continuous-time inventory routing; repeated delivery; event order; tank replenishment; mixed-integer linear programming}
+\metainfo{Form domain: Inventory management \textbullet{} Model: MILP \textbullet{} Exact witness: reference infeasible, generated model optimal}
+
+\section{Business Brief}
+
+\begin{businessbrief}
+We plan replenishment routes for industrial gas, fuel, or liquid raw material that customers consume continuously. Each customer has an on-site tank: too little inventory interrupts operations, while too much exceeds physical capacity. Every customer must also retain a required reserve at the end of the planning horizon. Vehicles may leave the warehouse and return to reload. Decide when vehicles depart, which customers they visit, and how much they deliver at every visit. Some customers may require multiple deliveries. Minimize travel cost while preventing stockouts and overflow throughout the day.
+\end{businessbrief}
+
+The brief requires decisions in continuous time. A daily aggregate balance cannot certify feasibility because inventory can cross a bound between the start and end of the horizon.
+
+\section{Precise Problem}
+
+Let $G=(\{0\}\cup C,E)$ contain depot $0$ and customers $C$ over horizon $[0,H]$. Customer $i$ has initial inventory $I_i^0$, lower and upper bounds $L_i$ and $U_i$, continuous usage rate $\rho_i$, and terminal requirement $F_i$. At most $m$ vehicles of capacity $Q$ travel with arc cost $c_{ij}$ and time $\tau_{ij}$. Vehicles may return to the depot to reload.
+
+For customer $i$, let $R_i$ index potential replenishment events. If copy $\alpha\in R_i$ is active, $a_{i\alpha}$ and $b_{i\alpha}$ are arrival and departure times and $q_{i\alpha}$ is the delivered quantity. The physical trajectory is
+\begin{equation}
+I_i(t)=I_i^0+\sum_{\alpha:b_{i\alpha}\le t}q_{i\alpha}-\rho_i t,
+\qquad t\in[0,H]. \label{eq:trajectory}
+\end{equation}
+Feasibility requires $L_i\le I_i(t)\le U_i$ throughout the horizon and $I_i(H)\ge F_i$.
+
+\section{Independently Derived Event-Copy Formulation}
+
+Let $\mathcal N=\{(0,1)\}\cup\{(i,\alpha):i\in C,\alpha\in R_i\}$ and let $\mathcal E^d$ be feasible movement arcs in mode $d\in\{0,1\}$, where mode 1 includes a depot reload; write $\mathcal E=\{(d,i,\alpha,j,\beta):(i,\alpha,j,\beta)\in\mathcal E^d\}$. Binary $x^d_{i\alpha j\beta}$ selects an arc and $y_{i\alpha}$ activates visit copy $\alpha$. Nonnegative $f_{i\alpha j\beta}$ is carried product on a direct arc, $\ell_{i\alpha}$ is a depot reload, and $\widetilde a_{i\alpha j\beta}$ carries the successor arrival time on a selected event arc. The model below is derived directly from the stated route, reload, and inventory rules:
+\begin{align}
+\min\quad &\sum_{(d,i,\alpha,j,\beta)\in\mathcal E}c_{ij}^d x^d_{i\alpha j\beta}, \label{eq:obj}\\
+\text{s.t.}\quad
+&\sum_{d}\sum_{(j,\beta)}x^d_{j\beta i\alpha}=y_{i\alpha},\quad
+ \sum_{d}\sum_{(j,\beta)}x^d_{i\alpha j\beta}=y_{i\alpha}
+&&\forall i\in C,\alpha\in R_i, \label{eq:degree}\\
+&\sum_{(j,\beta)}x^0_{0,1,j,\beta}\le m, \label{eq:fleet}\\
+&\sum_{(i,\alpha):(i,\alpha,j,\beta)\in\mathcal E^0\cup\mathcal E^1}
+\widetilde a_{i\alpha j\beta}=a_{j\beta}
+&&\forall j\in C,\beta\in R_j, \label{eq:arrivaldef}\\
+&b_{i\alpha}+\sum_d\sum_{(j,\beta)}\tau_{ij}^d x^d_{i\alpha j\beta}
+\le\sum_{(j,\beta)}\widetilde a_{i\alpha j\beta}
+&&\forall i\in C,\alpha\in R_i, \label{eq:time}\\
+&y_{i,\alpha+1}\le y_{i\alpha}
+&&\forall i,\alpha,\alpha+1\in R_i, \label{eq:activeorder}\\
+&\boxed{b_{i\alpha}\le a_{i,\alpha+1}+(H-\tau_{i0})(y_{i\alpha}-y_{i,\alpha+1})}
+&&\forall i,\alpha,\alpha+1\in R_i. \label{eq:eventorder}
+\end{align}
+Here $\widetilde a$ is bounded by the selected arc and the valid arrival window; for depot-return arcs its upper bound is $H$. These bounds make Eqs.~\eqref{eq:arrivaldef}--\eqref{eq:time} valid without introducing depot arrival or departure variables.
+Product balance and capacity are
+\begin{align}
+&\sum_{(i,\alpha)}f_{i\alpha j\beta}+\ell_{j\beta}
+=q_{j\beta}+\sum_{(i,\alpha)}f_{j\beta i\alpha}
+&&\forall j\in C,\beta\in R_j, \label{eq:product}\\
+&0\le f_{i\alpha j\beta}\le Qx^0_{i\alpha j\beta},\quad
+0\le\ell_{j\beta}\le Q\sum_{(i,\alpha)}x^1_{i\alpha j\beta}, \label{eq:capacity}\\
+&0\le q_{i\alpha}\le Qy_{i\alpha}
+&&\forall i\in C,\alpha\in R_i. \label{eq:delivery}
+\end{align}
+Because inventory decreases between deliveries, the lower bound is checked immediately before an event and the upper bound immediately after it:
+\begin{align}
+&I_i^0y_{i\alpha}+\sum_{\gamma<\alpha}q_{i\gamma}-\rho_i a_{i\alpha}
+\ge L_i y_{i\alpha}, \label{eq:lower}\\
+&I_i^0y_{i\alpha}+\sum_{\gamma\le\alpha}q_{i\gamma}-\rho_i b_{i\alpha}
+\le U_i y_{i\alpha}+Q\sum_{\gamma<\alpha}(y_{i\gamma}-y_{i\alpha}), \label{eq:upper}\\
+&I_i^0+\sum_{\alpha\in R_i}q_{i\alpha}-\rho_iH\ge F_i
+&&\forall i\in C. \label{eq:terminal}
+\end{align}
+The copy order in~\eqref{eq:eventorder} gives every repeated delivery the same physical history. The route, time, quantity, and inventory states therefore describe one executable plan.
+
+\section{Why the Candidate Is Strong}
+
+A generated model may introduce a binary $o^i_{ef}$ indicating that delivery event $e$ precedes event $f$ at customer $i$. Pairwise antisymmetry alone does not create a total order: cyclic precedence can make different events see incompatible subsets of prior deliveries. Each upper-bound check can then pass even though no physical inventory trajectory satisfies all checks simultaneously.
+
+\evidencebox{Set $H=10$, $I^0=90$, $\rho=1$, $L=0$, $U=100$, and $F=100$. Four vehicles have capacity 5; service time is zero, and each depot--customer leg has time 5 and cost 1. Every visit must occur at $t=5$. The tank can then accept at most 15 units, while the terminal reserve needs 20, so the reference problem is infeasible. The recorded
+\texttt{gpt-5.5-2026-04-23} model returns OPTIMAL with cost 8 and four simultaneous five-unit deliveries. Their true aggregate inventory is $85+20=105>100$.}
+
+The witness isolates formulation correctness from computational performance. Routing, travel time, capacity, and terminal balance all hold. Only event-order consistency separates the false solution from a feasible replenishment plan.
+
+\section{Reproducible Package}
+
+The package includes the business brief, precise event-copy formulation, Python/Gurobi implementation, exact witness runner, run manifest with content hashes, and a standard-library checker for the complete one-customer certificate. The public witness and solver input are identical, so the intended infeasibility and the generated false-feasible solution can be reproduced from one compact instance.
+
+The business brief, numerical witness, exposition, checker, and solver were written independently for this challenge. The witness is original synthetic data, not a copied or derived benchmark instance. The cited papers provide related-literature context only; no paper text, upstream code, or benchmark archive is redistributed. Code is MIT licensed and the original statement and witness are CC BY 4.0. Public package: \url{https://github.com/Zhengzhong-You/OR-Bench}.
+
+\begin{thebibliography}{9}\small
+\bibitem{lagos2020}
+F. Lagos, N. Boland, and M. Savelsbergh. 2020.
+The continuous-time inventory-routing problem.
+\emph{Transportation Science} 54(2):375--399.
+\doi{10.1287/trsc.2019.0902}.
+
+\bibitem{wang2025}
+A. Wang, X. Li, J. E. Arbogast, Z. Wilson, and C. E. Gounaris. 2025.
+A novel mixed-integer linear programming formulation for continuous-time inventory routing.
+\emph{Computers \& Operations Research} 174:106883.
+\doi{10.1016/j.cor.2024.106883}.
+\end{thebibliography}
+
+\end{document}
