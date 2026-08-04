@@ -45,6 +45,8 @@ Each TeX document embeds the same neutral 10-point academic layout with compact 
 
 A current TeX Live installation with `latexmk` is sufficient.
 
+The three standalone sources are also compatible with Texifier's built-in TexpadTeX LIVE typesetter; Auto-Sense keeps them in LIVE mode.
+
 ```bash
 make pdf-all
 ```
