@@ -22,17 +22,17 @@ Every problem folder now contains exactly five files:
 2. `business_description.docx` — the Form-ready business-level-description upload;
 3. `instance.csv` — the associated data and provenance;
 4. one Python solver — the reference formulation and its built-in verification;
-5. one LaTeX source — the editable precise problem document.
+5. one self-contained LaTeX source — the editable precise problem document, compilable without a repository-specific style file.
 
 Compiled PDFs are kept together in `output/pdf/`, outside the problem folders. Detailed screening prompts, raw generated programs, execution logs, and superseded checkers are preserved in the local research archive instead of cluttering the submission packages.
 
-The TeX documents share [`latex/orbenchcompact.sty`](latex/orbenchcompact.sty): a neutral 10-point academic layout with compact spacing, restrained rules, readable mathematics, and no borrowed publisher branding or class code.
+Each TeX document embeds the same neutral 10-point academic layout with compact spacing, restrained rules, readable mathematics, and no borrowed publisher branding or class code. This small duplication makes every paper independently compilable after download or Form review.
 
 ## Repository Layout
 
 ```text
 .
-├── latex/                              # Shared compact document style
+├── latex/                              # Reference copy of the embedded layout
 ├── problems/
 │   ├── 01_cyclic_crossdock_service_network_design/
 │   ├── 02_event_ordered_continuous_time_replenishment/

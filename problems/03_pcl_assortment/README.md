@@ -18,7 +18,7 @@ A valid paired combinatorial logit model must preserve every state of each pair.
 | `business_description.docx` | Business-level description for the Form's dedicated upload |
 | `instance.csv` | Six-product derivative instance with source mapping and complete upstream MIT notice |
 | `solve_pcl_structured.py` | Exact Gurobi MILP plus exhaustive 57-assortment verification |
-| `pcl_assortment.tex` | Editable source of the precise problem document |
+| `pcl_assortment.tex` | Self-contained, directly compilable source of the precise problem document |
 
 The compiled document is centralized at `output/pdf/pcl_assortment.pdf`.
 

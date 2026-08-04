@@ -1,5 +1,110 @@
 \documentclass[10pt]{article}
-\usepackage{orbenchcompact}
+\usepackage[T1]{fontenc}
+\usepackage{newtxtext}
+\usepackage{newtxmath}
+\usepackage[letterpaper,top=0.68in,bottom=0.70in,left=0.72in,right=0.72in,
+  headheight=12pt,headsep=7pt,footskip=20pt]{geometry}
+\usepackage{microtype}
+\usepackage{amsmath,mathtools,bm}
+\usepackage{booktabs,tabularx,array}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage{caption}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+\usepackage{url}
+
+% Self-contained compact OR-Bench layout.
+\definecolor{orblue}{RGB}{24,67,108}
+\definecolor{orgray}{RGB}{88,94,101}
+\definecolor{orlight}{RGB}{246,247,248}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=orblue,
+  citecolor=orblue,
+  urlcolor=orblue,
+  pdfborder={0 0 0}
+}
+\setlength{\parindent}{1em}
+\setlength{\parskip}{0pt}
+\setlength{\tabcolsep}{4.5pt}
+\renewcommand{\arraystretch}{1.08}
+\setlist[itemize]{leftmargin=1.35em,itemsep=1pt,topsep=3pt,parsep=0pt}
+\setlist[enumerate]{leftmargin=1.45em,itemsep=1pt,topsep=3pt,parsep=0pt}
+\captionsetup{font=small,labelfont=bf,labelsep=period,skip=4pt,hypcap=false}
+\titleformat{\section}
+  {\bfseries\fontsize{11.6}{13.2}\selectfont}
+  {\thesection.}{0.45em}{}
+\titleformat{\subsection}
+  {\bfseries\fontsize{10.2}{11.8}\selectfont}
+  {\thesubsection.}{0.45em}{}
+\titlespacing*{\section}{0pt}{10pt plus 2pt minus 2pt}{3pt}
+\titlespacing*{\subsection}{0pt}{7pt plus 1pt minus 1pt}{2pt}
+\makeatletter
+\newcommand{\obshorttitle}{OR-Bench Candidate}
+\newcommand{\shorttitle}[1]{\renewcommand{\obshorttitle}{#1}}
+\AtBeginDocument{\hypersetup{pdftitle={\@title},pdfauthor={\@author}}}
+\renewcommand{\maketitle}{%
+  \thispagestyle{plain}%
+  \begin{center}
+    {\fontsize{17}{19.5}\selectfont\bfseries\@title\par}
+    \vspace{4pt}
+    {\small\@author\par}
+    \ifx\@date\@empty\else\vspace{1pt}{\footnotesize\color{orgray}\@date\par}\fi
+  \end{center}
+  \vspace{4pt}\hrule height 0.55pt\vspace{7pt}
+}
+\makeatother
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\scriptsize\color{orgray}\obshorttitle}
+\fancyhead[R]{\scriptsize\color{orgray}OR-Bench candidate problem}
+\fancyfoot[C]{\scriptsize\thepage}
+\renewcommand{\headrulewidth}{0.35pt}
+\renewcommand{\footrulewidth}{0pt}
+\fancypagestyle{plain}{
+  \fancyhf{}
+  \fancyfoot[C]{\scriptsize\thepage}
+  \renewcommand{\headrulewidth}{0pt}
+}
+\renewenvironment{abstract}{%
+  \noindent\begin{minipage}{\linewidth}\small
+  \textbf{Abstract.}\hspace{0.35em}%
+}{%
+  \end{minipage}\par\vspace{5pt}
+}
+\newcommand{\keywords}[1]{%
+  \noindent{\small\textbf{Keywords.}\hspace{0.35em}#1}\par\vspace{5pt}
+}
+\newenvironment{businessbrief}{%
+  \par\vspace{4pt}\noindent
+  \begin{minipage}{\linewidth}
+  \hrule height 0.4pt\vspace{4pt}
+  \small\textbf{Business-level description.}\hspace{0.35em}\itshape
+}{%
+  \par\vspace{4pt}\hrule height 0.4pt
+  \end{minipage}\par\vspace{4pt}
+}
+\newcommand{\evidencebox}[1]{%
+  \par\vspace{3pt}\noindent
+  \colorbox{orlight}{%
+    \parbox{\dimexpr\linewidth-2\fboxsep\relax}{\small\textbf{Failure certificate.}\hspace{0.35em}#1}%
+  }\par\vspace{4pt}
+}
+\newcommand{\metainfo}[1]{%
+  \noindent{\footnotesize\color{orgray}#1}\par\vspace{5pt}
+}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcolumntype{R}{>{\raggedleft\arraybackslash}X}
+\AtBeginDocument{%
+  \setlength{\abovedisplayskip}{6pt plus 2pt minus 2pt}
+  \setlength{\belowdisplayskip}{6pt plus 2pt minus 2pt}
+  \setlength{\abovedisplayshortskip}{3pt plus 1pt}
+  \setlength{\belowdisplayshortskip}{4pt plus 1pt}
+  \setlength{\jot}{2pt}
+}
+\providecommand{\doi}[1]{\href{https://doi.org/#1}{doi:#1}}
 
 \title{Limited-Display PCL Assortment Planning}
 \author{Zhengzhong You}

@@ -18,7 +18,7 @@ Repeated deliveries must form one physically consistent inventory trajectory. Pa
 | `business_description.docx` | Business-level description for the Form's dedicated upload |
 | `instance.csv` | Original one-customer false-feasibility witness |
 | `solve_ctirp_submission.py` | Self-contained event-copy Gurobi MILP plus analytic verification |
-| `event_ordered_continuous_time_replenishment.tex` | Editable source of the precise problem document |
+| `event_ordered_continuous_time_replenishment.tex` | Self-contained, directly compilable source of the precise problem document |
 
 The compiled document is centralized at `output/pdf/event_ordered_continuous_time_replenishment.pdf`.
 

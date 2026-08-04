@@ -18,7 +18,7 @@ Freight must follow a time-feasible itinerary while the repeated weekly services
 | `business_description.docx` | Business-level description for the Form's dedicated upload |
 | `instance.csv` | Original synthetic periodic time-space data |
 | `solve_cyclic_crossdock_snd.py` | Gurobi formulation plus built-in five-case verification |
-| `cyclic_crossdock_service_network_design.tex` | Editable source of the precise problem document |
+| `cyclic_crossdock_service_network_design.tex` | Self-contained, directly compilable source of the precise problem document |
 
 The compiled document is centralized at `output/pdf/cyclic_crossdock_service_network_design.pdf`.
 
