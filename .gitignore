@@ -51,3 +51,6 @@ src/or_bench/
 # Local notes
 local/
 scratch/
+
+# Local compressed research archive; intentionally not pushed to GitHub.
+/OR-Bench-internal-archive-*.zip

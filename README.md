@@ -85,3 +85,5 @@ New code is released under the [MIT License](LICENSE). Original problem statemen
 Third-party paper PDFs and benchmark archives are not redistributed. Each problem README links directly to the paper, official artifact, or documentation needed to reproduce the result.
 
 The packages are organized one problem per OR-Bench form response.
+
+Superseded research material is kept outside the public Git history in the local ZIP documented by [`LOCAL_ARCHIVE.md`](LOCAL_ARCHIVE.md).
