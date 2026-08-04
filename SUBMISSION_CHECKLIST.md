@@ -2,9 +2,17 @@
 
 Submit **one Google Form response per problem**. Each response uses the same package template but a different domain classification. The Form's main-material field accepts at most five files; the business document and solver each have their own separate upload field.
 
+## Official benchmark reference
+
+- Official call: https://connect.informs.org/discussion/call-for-contributions-a-community-benchmark-for-llms-on-optimization-modeling
+- Official example repository: https://github.com/CoraLiang01/OR-Bench
+- The repository contained 41 problem instances when checked on August 4, 2026. Each row is one problem instance with a precise description, domain, data address, optimal value, and optimal solution. Thirteen rows also contained a vague business-level description.
+- The call requests one precise statement and its data, one ground-truth formulation with working solver code, and one vague business description for each problem. It does not require multiple numerical examples inside one contribution.
+- Our three candidates should therefore remain three separate Form responses. Each response should present one canonical, mechanically verifiable instance with a complete operational story.
+
 ## Shared answers
 
-- Name: Zhengzhong You
+- Name: Zhengzhong Ricky You
 - Email: enter the address shown by the signed-in Google account
 - Affiliation: University of Florida
 - Model type: Mixed-integer linear program

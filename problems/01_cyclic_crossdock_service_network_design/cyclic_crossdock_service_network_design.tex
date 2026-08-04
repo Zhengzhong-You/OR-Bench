@@ -106,7 +106,7 @@
 \providecommand{\doi}[1]{\href{https://doi.org/#1}{doi:#1}}
 
 \title{Cyclic Freight Service Design with Cross-Dock Handling}
-\author{Zhengzhong You}
+\author{Zhengzhong Ricky You}
 \date{OR-Bench candidate problem \textbullet{} August 2026}
 \shorttitle{Cyclic Cross-Dock Service Network Design}
 
@@ -114,22 +114,22 @@
 \maketitle
 
 \begin{abstract}
-Scheduled service network design must synchronize two flows: freight follows time-feasible connections, while reusable vehicles cover the weekly timetable with a finite fleet. This candidate isolates their interaction in an eight-leg periodic network with two tractors and one-slot cross-dock handling. The exact optimum is a direct out-and-back rotation costing 15. A generated GPT-5.4 program declares the feasible instance infeasible after duplicating destination demand. Two independent GPT-5-mini programs instead prove 11.5 with a design that needs three staggered tractors. Exact enumeration certifies both errors.
+Freight carriers design repeating line-haul schedules with a finite fleet of reusable tractors. A feasible plan must route each shipment through time-compatible services and close every tractor rotation within the weekly fleet budget. This benchmark isolates that interaction in an eight-leg periodic network with one cross-dock transfer and two available tractors. The unique optimum operates a direct outbound leg and its return, at a weekly cost of 15. Generated solver programs exhibit two distinct formulation errors. One duplicates destination demand and declares the instance infeasible. Two others undercount tractor use and report 11.5 for a schedule that requires three tractors. Exhaustive enumeration of all $2^8$ service designs certifies the optimum and both failure modes.
 \end{abstract}
-\keywords{service network design; cross-docking; periodic time-space network; fleet balance; mixed-integer linear programming}
+\keywords{service network design, cross-docking, periodic time-space network, fleet balance, mixed-integer linear programming}
 \metainfo{Form domain: Supply chain and logistics \textbullet{} Model: MILP \textbullet{} Exact oracle: all $2^8$ service-leg designs}
 
 \section{Business Brief}
 
 \begin{businessbrief}
-A freight carrier publishes the same four-slot line-haul plan every week. Each operated leg moves one owned tractor; unlisted deadheads and rentals are unavailable, but tractors may wait freely at terminals. At most two tractors cover the repeating timetable. One indivisible load is ready at O in slot 0 and is due at D by slot 3. At hub H, unloading, sorting, and reloading occupy one complete slot: a load arriving in slot 1 is ready only in slot 2. Choose the weekly service legs and load path that minimize operating cost.
+A regional freight carrier is redesigning a line-haul schedule that repeats every week. Management must decide which candidate services to operate and how to route one urgent load from its origin to its destination. Every operated service requires an owned tractor. Tractors may wait at terminals, but rentals and unlisted repositioning moves are unavailable. The entire weekly schedule must be covered by at most two tractors. The load may travel directly or transfer through a cross-dock, where unloading, sorting, and reloading take one full time slot. Management wants the least-cost schedule that delivers the load on time and remains executable every week with the available fleet.
 \end{businessbrief}
 
-The request is a compact scheduled service network design problem: vehicle conservation alone does not certify that the load can execute the same timetable.
+The business request couples three decisions that are often modeled separately: service selection, shipment timing, and reusable-asset deployment. A locally balanced time-space network can still be operationally impossible when its periodic walks consume more tractor time than the fleet provides. The benchmark is designed to expose that gap.
 
-\section{Periodic Network and Instance}
+\section{From Business Request to Benchmark Instance}
 
-Let $N=\{O,H,D\}\times\{0,1,2,3\}$ be periodic time-space nodes, $A$ the listed tractor legs, and $B$ the zero-cost one-slot waiting arcs. A return leg enters its stated node in the next weekly cycle. Each service leg has frequency at most one.
+We encode the request as one canonical instance, which is the unit evaluated in OR-Bench. The instance is deliberately small enough for complete verification while retaining the two operational mechanisms that create the modeling challenge. Let $N=\{O,H,D\}\times\{0,1,2,3\}$ be the periodic time-space nodes, $A$ the candidate tractor legs, and $B$ the zero-cost one-slot waiting arcs. A return leg reaches its stated terminal in the next weekly cycle. Each candidate service can operate at most once per week.
 
 \begin{center}
 \captionof{table}{Candidate service legs. Return legs are cargo-ineligible.}
@@ -149,19 +149,20 @@ $R4$ & $D3$ & $O0$ next cycle & 7.5 & no \\
 \end{tabularx}
 \end{center}
 
-The one-slot handling transition connects the freight state $H1$ to $H2$. Thus the correct feasible cargo paths are
+One indivisible load is released at $O0$ and must reach $D$ no later than slot 3. The one-slot cross-dock operation moves the freight state from $H1$ to $H2$. The two feasible cargo paths are therefore
 \[
-\mathcal R=\{r^{\rm dir}=(F4),\;r^{\rm late}=(F1,F3)\}.
+\mathcal R=\{r^{\rm dir}=(F4),\ r^{\rm xdock}=(F1,F3)\}.
 \]
-The tempting pair $(F1,F2)$ is excluded: $F1$ arrives at 1, handling finishes at 2, and $F2$ departs at 1.
+The apparently inexpensive pair $(F1,F2)$ is not a valid itinerary. Leg $F1$ reaches the hub in slot 1, the cross-dock operation finishes in slot 2, and leg $F2$ has already departed in slot 1. This timing detail separates a valid service path from a merely connected path.
 
-\section{Exact MILP}
+\newpage
+\section{Ground-Truth MILP}
 
-Let $y_a\in\{0,1\}$ indicate that service leg $a$ operates, $w_b\in\mathbb Z_+$ count tractors on waiting arc $b$, and $z_r\in\{0,1\}$ select cargo path $r\in\mathcal R$. Write $d_e$ for arc duration, $H=4$ for the weekly horizon, and $M=2$ for the fleet. The exact formulation is
+Let $y_a\in\{0,1\}$ indicate whether service leg $a$ operates, let $w_b\in\mathbb Z_+$ count tractors on waiting arc $b$, and let $z_r\in\{0,1\}$ select cargo path $r\in\mathcal R$. Write $d_e$ for arc duration, $H=4$ for the weekly horizon, and $M=2$ for the fleet. The ground-truth MILP is
 \begin{align}
 \min\quad &\sum_{a\in A}c_a y_a, \label{eq:obj}\\
 \text{s.t.}\quad
-&\sum_{r\in\mathcal R}z_r=1, \label{eq:path}\qquad\\[-9pt]
+&\sum_{r\in\mathcal R}z_r=1, \label{eq:path}\\
 &z_r\le y_a &&\forall r\in\mathcal R,\ a\in r, \label{eq:link}\\
 &\sum_{a\in A\cap\delta^+(n)}y_a+\sum_{b\in B\cap\delta^+(n)}w_b
 =\sum_{a\in A\cap\delta^-(n)}y_a+\sum_{b\in B\cap\delta^-(n)}w_b
@@ -169,38 +170,38 @@ Let $y_a\in\{0,1\}$ indicate that service leg $a$ operates, $w_b\in\mathbb Z_+$ 
 &\sum_{a\in A}d_a y_a+\sum_{b\in B}d_b w_b\le HM=8, \label{eq:fleet}\\
 &y_a,z_r\in\{0,1\},\quad w_b\in\mathbb Z_+. \label{eq:domain}
 \end{align}
-Equation~\eqref{eq:balance} closes the periodic tractor circulation. Equation~\eqref{eq:fleet} is essential: total tractor-time per period cannot exceed two tractor-weeks. Path eligibility is generated only after release, deadline, and the connection rule $\operatorname{dep}(b)\ge\operatorname{arr}(a)+h_H$ through H, where $h_H=1$.
+Equation~\eqref{eq:path} selects one itinerary, and~\eqref{eq:link} opens its services. Equation~\eqref{eq:balance} closes the tractor circulation at every periodic node, while~\eqref{eq:fleet} limits total tractor-time to $HM=8$ tractor-slots. Path generation enforces the hub connection rule $\operatorname{dep}(b)\ge\operatorname{arr}(a)+h_H$, where $h_H=1$.
 
-\section{Exact Outcome and Diagnostic Ablations}
+\section{Optimal Design and Diagnostic Evidence}
 
-The direct path opens $F4,R4$ and costs 15. The legal transfer path is coverable by $F1$, one hub wait, $F3$, and $R4$, but costs 19.5. Thus the unique exact optimum is direct. Five exhaustive cases localize the two principal modeling layers.
+The direct itinerary operates $F4$ and $R4$. These legs form a four-slot rotation covered by one tractor at a weekly cost of 15. The cross-dock itinerary requires $F1$, a hub wait, $F3$, and $R4$, at a cost of 19.5. The direct rotation is therefore the unique optimum. Exhaustive evaluation also measures the effect of omitting handling time, tractor circulation, or the fleet budget.
 
 \begin{center}
 \captionof{table}{Correct model and four diagnostic ablations.}
-\begin{tabularx}{0.96\linewidth}{Y l r}
+\begin{tabularx}{0.98\linewidth}{Y l l r}
 \toprule
-Model & Selected cargo/service legs & Objective \\
+Model & Cargo path & Operated services & Objective \\
 \midrule
-Correct handling, circulation, fleet & $F4;\ F4,R4$ (1 tractor) & \textbf{15} \\
-Omit handling only & $F1,F2;\ F1,F2,R1,R2$ (2) & 8 \\
-Omit fleet limit only & $F4;\ F4,R1,R2$ (3) & 11.5 \\
-Omit all asset constraints & $F4;\ F4$ & 7.5 \\
-Omit handling and all assets & $F1,F2;\ F1,F2$ & 4 \\
+Ground truth & $F4$ & $F4,R4$ (1 tractor) & \textbf{15} \\
+No handling time & $F1,F2$ & $F1,F2,R1,R2$ (2) & 8 \\
+No fleet limit & $F4$ & $F4,R1,R2$ (3) & 11.5 \\
+No tractor constraints & $F4$ & $F4$ & 7.5 \\
+No handling or tractors & $F1,F2$ & $F1,F2$ & 4 \\
 \bottomrule
 \end{tabularx}
 \end{center}
 
-\evidencebox{A GPT-5.4 (2026-03-05, low reasoning) program returns INFEASIBLE. Its shipment balance assigns supply $+1$ at $O0$ but demand $-1$ at both $D2$ and $D3$, so total demand is two for one load. The explicit design $F4,R4$ carries the load directly, uses one tractor, and costs 15; infeasibility is therefore false.}
+\evidencebox{A low-reasoning GPT-5.4 program dated 2026-03-05 returns \textsc{infeasible}. Its shipment balance assigns one unit of supply at $O0$ but one unit of demand at both $D2$ and $D3$. It therefore requires two deliveries for one load. The explicit rotation $F4,R4$ is a feasible certificate with objective 15.}
 
-A separate generated Gurobi model proves 11.5 with $F4,R1,R2$. Its modulo-week walk uses $F4$, three D-waits, $R2$, and $R1$: $3+3+3+3=12$ tractor-slots. Repeating its weekly departures needs $12/4=3$ staggered tractors, but only two exist. The underestimation is 3.5, or 23.33\% of the correct optimum.
+A second generated Gurobi model reports 11.5 with services $F4,R1,R2$. Its periodic walk uses $F4$, three waits at $D$, $R2$, and $R1$, for $3+3+3+3=12$ tractor-slots. Repeating those departures every four slots requires $12/4=3$ staggered tractors, although only two are available. The missing fleet-time restriction understates the optimum by 3.5, or 23.33\%.
 
-Two independent GPT-5-mini (2025-08-07, high reasoning) runs on the final canonical prompt produced executable models with the same infeasible design and objective 11.5. One collapses the winding cycle into a named-tractor circulation; the other undercounts cross-week arcs. Contemporaneous high-reasoning runs of GPT-5.4, GPT-5.5, and GPT-5.6 Luna returned the correct objective 15. The package therefore records distinct, reproducible errors without claiming universal failure.
+Two independent GPT-5-mini runs dated 2025-08-07 reproduce the 11.5 error. One collapses a winding periodic walk into one named-tractor circulation, and the other undercounts cross-week arcs. High-reasoning GPT-5.4, GPT-5.5, and GPT-5.6 Luna runs recover the correct objective. The instance therefore separates shipment-balance errors from periodic fleet-accounting errors.
 
-\section{Reproducibility and Sources}
+\section{Benchmark Package and Sources}
 
-The repository supplies the original synthetic instance, exact Gurobi model, independently generated shipment paths, a $2^8$ standard-library oracle, four ablations, the exact evaluation prompts, executable screened output, cleaned execution record, ground truth, and hashes. The statement and data are original CC BY 4.0 work; the solver is MIT licensed. No upstream data or code is copied. Public package: \url{https://github.com/Zhengzhong-You/OR-Bench}.
+The public package provides one fully specified benchmark instance, including the business brief, precise statement, original CSV data, and a Gurobi solver that verifies the ground truth and four ablations. The original statement and data are CC BY 4.0, and the solver is MIT licensed. Package: \url{https://github.com/Zhengzhong-You/OR-Bench}.
 
-Periodic time-space SND and vehicle design balance follow the conceptual setting of Gao, Jin, and Diao~\cite{gao2022}. The one-slot loading, unloading, and transshipment semantics is motivated by Google's official Shipping Network Design documentation~\cite{google2024}.
+The periodic time-space and vehicle-balance structure follows Gao, Jin, and Diao~\cite{gao2022}. The one-slot transfer semantics is motivated by Google's Shipping Network Design documentation~\cite{google2024}.
 
 \begin{thebibliography}{9}\small
 \bibitem{gao2022}
@@ -211,7 +212,7 @@ An iterative backbone algorithm for service network design problems.
 \bibitem{google2024}
 Google for Developers. 2024.
 Shipping Network Design, Operations Research API.
-\url{https://developers.google.com/optimization/service/shipping/network_design}.
+\href{https://developers.google.com/optimization/service/shipping/network_design}{Shipping Network Design documentation}.
 \end{thebibliography}
 
 \end{document}
