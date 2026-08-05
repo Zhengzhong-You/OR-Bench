@@ -5,47 +5,40 @@ Submit **one Google Form response per problem**. Each response uses the same pac
 ## Official benchmark reference
 
 - Official call: https://connect.informs.org/discussion/call-for-contributions-a-community-benchmark-for-llms-on-optimization-modeling
+- Contributor Form: https://forms.gle/SYQRNo7jLzBqBuXc8
 - Official example repository: https://github.com/CoraLiang01/OR-Bench
 - The repository contained 41 problem instances when checked on August 4, 2026. Each row is one problem instance with a precise description, domain, data address, optimal value, and optimal solution. Thirteen rows also contained a vague business-level description.
 - The call requests one precise statement and its data, one ground-truth formulation with working solver code, and one vague business description for each problem. It does not require multiple numerical examples inside one contribution.
-- Our three candidates should therefore remain three separate Form responses. Each response should present one canonical, mechanically verifiable instance with a complete operational story.
+- Our two candidates should therefore remain two separate Form responses. Each response should present one canonical, mechanically verifiable instance with a complete operational story.
 
 ## Shared answers
 
 - Name: Zhengzhong Ricky You
-- Email: enter the address shown by the signed-in Google account
+- Email: ricky.you.or@gmail.com
 - Affiliation: Tsinghua University
 - Model type: Mixed-integer linear program
 - Rights: select the confirmation checkbox; the package-level source and license review is complete
 - Co-authorship interest: Yes
 
-## 1. Cyclic Freight Service Design with Cross-Dock Handling
-
-- Form domain: Supply chain and logistics
-- Source field: Original synthetic problem. Related methods: https://doi.org/10.3390/pr10071373 and https://developers.google.com/optimization/service/shipping/network_design
-- Business upload: `problems/01_cyclic_crossdock_service_network_design/business_description.docx`
-- Solver upload: `problems/01_cyclic_crossdock_service_network_design/solve_cyclic_crossdock_snd.py`
-- Main files (2): `output/pdf/cyclic_crossdock_service_network_design.pdf`; `problems/01_cyclic_crossdock_service_network_design/instance.csv`
-
-## 2. Event Consistency in Continuous-Time Inventory Routing
+## 1. Event Consistency in Continuous-Time Inventory Routing
 
 - Form domain: Inventory management
-- Source field: Original synthetic challenge; related literature: https://doi.org/10.1287/trsc.2019.0902 and https://doi.org/10.1016/j.cor.2024.106883
-- Business upload: `problems/02_event_ordered_continuous_time_replenishment/business_description.docx`
-- Solver upload: `problems/02_event_ordered_continuous_time_replenishment/solve_ctirp_submission.py`
-- Main files (2): `output/pdf/event_ordered_continuous_time_replenishment.pdf`; `problems/02_event_ordered_continuous_time_replenishment/instance.csv`
+- Source field: Reference formulation adapted from Wang et al. (2025), https://doi.org/10.1016/j.cor.2024.106883; continuous-time inventory-routing context from Lagos et al. (2020), https://doi.org/10.1287/trsc.2019.0902. The one-customer instance is original and synthetic.
+- Business upload: `problems/01_event_ordered_continuous_time_replenishment/business_description.docx`
+- Solver upload: `problems/01_event_ordered_continuous_time_replenishment/solve_ctirp_submission.py`
+- Main files (2): `output/pdf/event_ordered_continuous_time_replenishment.pdf`; `problems/01_event_ordered_continuous_time_replenishment/instance.csv`
 
-## 3. Pair-State Consistency in Paired Combinatorial Logit Assortment Planning
+## 2. Pair-State Consistency in Paired Combinatorial Logit Assortment Planning
 
 - Form domain: Revenue management and pricing
 - Source field: Adapted from Feng, Che, and Chen (2026), https://doi.org/10.1287/ijoc.2024.0830. The six-product synthetic instance is derived from the corresponding MIT-licensed code and data repository, https://doi.org/10.1287/ijoc.2024.0830.cd; https://github.com/INFORMSJoC/2024.0830 at commit a3920679d4725ec714af29d24034a5d6d9db6b8f.
-- Business upload: `problems/03_pcl_assortment/business_description.docx`
-- Solver upload: `problems/03_pcl_assortment/solve_pcl_structured.py`
-- Main files (2): `output/pdf/pcl_assortment.pdf`; `problems/03_pcl_assortment/instance.csv` (contains the complete upstream MIT notice)
+- Business upload: `problems/02_pcl_assortment/business_description.docx`
+- Solver upload: `problems/02_pcl_assortment/solve_pcl_structured.py`
+- Main files (2): `output/pdf/pcl_assortment.pdf`; `problems/02_pcl_assortment/instance.csv` (contains the complete upstream MIT notice)
 
 ## Final gate for every response
 
-1. Confirm the short title matches the PDF, business document, instance, and solver.
+1. Confirm the title agrees wherever it is stated and that the PDF, business document, instance, and solver identify the same problem.
 2. Run the reference solver with `--verify` from a clean checkout.
 3. Confirm every uploaded file is below 10 MB and uses a file type accepted by the live Form.
 4. Confirm the public package URL appears in the precise PDF: https://github.com/Zhengzhong-You/OR-Bench

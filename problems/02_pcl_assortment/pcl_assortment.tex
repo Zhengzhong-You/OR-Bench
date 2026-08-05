@@ -124,7 +124,7 @@
 \maketitle
 
 \begin{abstract}
-Assortment planning under the paired combinatorial logit (PCL) model couples a display decision with demand substitution across product pairs. When one member of a pair is offered and the other is not, the pair remains active and contributes the attraction weight of the offered product. We examine two incomplete formulations that replace the full pair-state system with either one global singleton term per offered product or terms for jointly offered pairs only. The PCL choice system of \citet{koppelman2000} and the assortment formulation of \citet{zhang2020} provide the reference model. On a six-product instance with a display limit of four, the unique optimal assortment is $\{3,5,6\}$ with expected margin 0.323647238294198. Both incomplete formulations select $\{2,3,5,6\}$. Under the reference model, that assortment has expected margin 0.285975423739680, which is 11.639776\% below optimum. Omitting pair states changes both the choice probabilities and the resulting assortment decision.
+Assortment planning under the paired combinatorial logit (PCL) model couples a display decision with demand substitution across product pairs. When one member of a pair is offered and the other is not, the pair remains active and contributes the attraction weight of the offered product. We examine two incomplete formulations that replace the full pair-state system with either one global singleton term per offered product or terms for jointly offered pairs only. The PCL choice system of \citet{koppelman2000} and the assortment formulation of \citet{zhang2020} provide the reference model. On a six-product instance with a display limit of four, the unique optimal assortment is $\{3,5,6\}$ with expected margin 0.323647. Both incomplete formulations select $\{2,3,5,6\}$. Under the reference model, that assortment has expected margin 0.285975, which is 11.64\% below optimum. Omitting pair states changes both the choice probabilities and the resulting assortment decision.
 \end{abstract}
 
 \keywords{assortment optimization; paired combinatorial logit; discrete choice; revenue management; mixed-integer linear programming}
@@ -135,11 +135,9 @@ Assortment planning under the paired combinatorial logit (PCL) model couples a d
 A retailer must choose up to four products for a limited display. The demand science team has estimated an attraction weight and a normalized contribution margin for each product. It has also calibrated a paired combinatorial logit choice model with a dissimilarity parameter for every unordered product pair and an outside-option weight for customers who leave without purchasing. The retailer selects the assortment that maximizes expected contribution margin while accounting for substitution among the displayed products.
 \end{businessbrief}
 
-A display limit requires the retailer to compare discrete assortments whose products compete for demand. The choice model must therefore map every offered set to the corresponding purchase probabilities before the assortments can be ranked.
+A display limit requires the retailer to compare discrete assortments in which the offered products compete for demand. Ranking these assortments therefore requires a choice model that maps each offered set to the corresponding purchase probabilities. The paired combinatorial logit (PCL) model of \citet{koppelman2000} provides such a representation by assigning a separate choice nest to each unordered pair of products. Using this pairwise representation, \citet{zhang2020} study assortment optimization under the PCL model. We adopt the standard PCL choice system and an exact linear-fractional reformulation as the reference model.
 
-The paired combinatorial logit (PCL) model of \citet{koppelman2000} assigns a separate choice nest to each unordered pair of products. \citet{zhang2020} study assortment optimization under this demand model. We adopt the standard PCL choice system and use an exact linear-fractional reformulation as the reference model.
-
-Pairwise demand creates a state-consistency requirement. Each pair contributes differently when only its first product, only its second product, or both products are offered. A formulation that omits or merges these states evaluates an altered demand model and may select a different assortment.
+The pairwise nests introduce a state-consistency requirement. For each product pair, the contribution to demand depends on whether only the first product, only the second product, or both products are offered. The selected assortment must therefore determine these three states consistently. A formulation that omits a state or merges distinct states changes the underlying choice probabilities and may consequently select an assortment that is not optimal under the intended PCL model.
 
 \section{Problem Definition}
 
@@ -176,10 +174,10 @@ I_{ij}
 \label{eq:massJ}
 \end{align}
 
-Let $S=\{10,01,11\}$ be the set of active pair states. For each $(i,j)\in\mathcal P$, binary variables $y_{ij}^{10}$, $y_{ij}^{01}$, and $y_{ij}^{11}$ indicate that only product $i$, only product $j$, or both products are offered. When neither product is offered, all three state variables equal zero.
+Let $S=\{10,01,11\}$ be the set of active pair-state labels, where each label records the offer status $(x_i,x_j)$. For each $(i,j)\in\mathcal P$, binary variables $y_{ij}^{10}$, $y_{ij}^{01}$, and $y_{ij}^{11}$ indicate that only product $i$, only product $j$, or both products are offered. When neither product is offered, all three state variables equal zero.
 
 For state $s\in S$, let $b_{ij}^s$ and $a_{ij}^s$ denote the denominator and expected-margin numerator coefficients. The denominator coefficients are $b_{ij}^{10}=v_i$, $b_{ij}^{01}=v_j$, and $b_{ij}^{11}=I_{ij}$. The numerator coefficients are $a_{ij}^{10}=r_iv_i$, $a_{ij}^{01}=r_jv_j$, and $a_{ij}^{11}=r_i\mu_{ij}^i+r_j\mu_{ij}^j$.
-The PCL denominator and expected-margin numerator are
+Because the state indicators are uniquely determined by $x$, the PCL denominator and expected-margin numerator are
 \begin{align}
 D(x)
 &=
@@ -281,7 +279,7 @@ Constraints~\eqref{eq:and} and \eqref{eq:states} select the unique state of ever
 
 \section{Failure of Incomplete Pair States}
 
-Two incomplete formulations replace the three-state system with restricted pair-state representations. Using superscript $\mathrm{SP}$ for singleton plus pair, the first formulation uses
+Two incomplete formulations replace the three-state system with restricted pair-state representations. Using superscript $\mathrm{SP}$ for singleton plus pair, the denominator $D^{\mathrm{SP}}(x)$ and expected-margin numerator $R^{\mathrm{SP}}(x)$ of the first formulation are
 \begin{align}
 D^{\mathrm{SP}}(x)
 &=
@@ -297,7 +295,7 @@ R^{\mathrm{SP}}(x)
 \end{align}
 The global singleton term counts each offered product once, while the reference model contributes one exactly-one-offered term for every absent counterpart.
 
-Using superscript $\mathrm{JP}$ for jointly offered pairs only, the second formulation uses
+Using superscript $\mathrm{JP}$ for jointly offered pairs only, the denominator $D^{\mathrm{JP}}(x)$ and expected-margin numerator $R^{\mathrm{JP}}(x)$ of the second formulation are
 \begin{align}
 D^{\mathrm{JP}}(x)
 &=
@@ -309,9 +307,9 @@ R^{\mathrm{JP}}(x)
 \sum_{(i,j)\in\mathcal P}a_{ij}^{11}x_ix_j.
 \label{eq:jpNumer}
 \end{align}
-Every pair with exactly one offered member disappears from this choice system. Both formulations therefore change the numerator and denominator used to rank assortments.
+The first and second incomplete formulations maximize $R^{\mathrm{SP}}(x)/D^{\mathrm{SP}}(x)$ and $R^{\mathrm{JP}}(x)/D^{\mathrm{JP}}(x)$, respectively, over the same feasible assortment set. Every pair with exactly one offered member disappears from the second choice system. Both formulations therefore change the numerator and denominator used to rank assortments.
 
-The six-product instance is derived from the computational artifact associated with exact PCL assortment optimization under general linear constraints \citep{feng2026,artifact}. Product IDs are remapped to $N=\{1,\ldots,6\}$, the display limit is $K=4$, and $v_0=3.84538427435401$. The outside-option probability equals 0.25 when all six products are offered. Table~\ref{tab:decisions} compares the exact reference solution with the decisions of the two incomplete formulations.
+The six-product instance is derived from the computational artifact associated with exact PCL assortment optimization under general linear constraints \citep{feng2026,artifact}. Product indices are remapped to $N=\{1,\ldots,6\}$, the display limit is $K=4$, and $v_0=3.845384$. The outside-option probability equals 0.25 when all six products are offered. All computations use the full-precision instance values. Reported objectives and absolute regret are rounded to six decimal places, and relative regret is rounded to two decimal places. Table~\ref{tab:decisions} compares the exact reference solution with the decisions of the two incomplete formulations.
 
 \begin{center}
 \captionof{table}{Assortments selected under the reference and incomplete formulations.}
@@ -320,20 +318,20 @@ The six-product instance is derived from the computational artifact associated w
 \toprule
 Formulation & Selected products & Objective under the formulation \\
 \midrule
-Reference PCL formulation & $\{3,5,6\}$ & 0.323647238294198 \\
-Singleton-plus-pair formulation & $\{2,3,5,6\}$ & 0.245658160940 \\
-Jointly-offered-pairs-only formulation & $\{2,3,5,6\}$ & 0.188961826760 \\
+Reference PCL formulation & $\{3,5,6\}$ & 0.323647 \\
+Singleton-plus-pair formulation & $\{2,3,5,6\}$ & 0.245658 \\
+Jointly-offered-pairs-only formulation & $\{2,3,5,6\}$ & 0.188962 \\
 \bottomrule
 \end{tabularx}
 \end{center}
 
 Each incomplete formulation is solved to optimality under its own objective. The two altered choice systems select the same four-product assortment.
 
-\evidencebox{The exact mixed-integer linear program and complete enumeration of all 57 feasible assortments identify the unique optimum $\{3,5,6\}$ with expected margin 0.323647238294198. Both incomplete formulations select $\{2,3,5,6\}$. Under the reference PCL model, that assortment has expected margin 0.285975423739680, giving absolute regret 0.037671814554518 and relative regret 11.639776\%.}
+\evidencebox{The exact mixed-integer linear program and complete enumeration of all 57 feasible assortments identify the unique optimum $\{3,5,6\}$ with expected margin 0.323647. Both incomplete formulations select $\{2,3,5,6\}$. Under the reference PCL model, that assortment has expected margin 0.285975, giving absolute regret 0.037672 and relative regret 11.64\%.}
 
 The display-capacity constraint holds for all three decisions. The discrepancy follows from the choice probabilities assigned to exactly-one-offered pairs. Preserving the complete pair-state system is therefore necessary for the optimization model to evaluate the calibrated PCL demand model.
 
-Supporting materials for the case study, including the derivative data, source document, reference solver, and verification instructions, are available in the \href{https://github.com/Zhengzhong-You/OR-Bench/tree/main/problems/03_pcl_assortment}{corresponding folder of the OR-Bench GitHub repository}.
+Supporting materials for the case study, including the derivative data, source document, reference solver, and verification instructions, are available in the \href{https://github.com/Zhengzhong-You/OR-Bench/tree/main/problems/02_pcl_assortment}{corresponding folder of the OR-Bench GitHub repository}.
 
 \begin{thebibliography}{9}\small
 

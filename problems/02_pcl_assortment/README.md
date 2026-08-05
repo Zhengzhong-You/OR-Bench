@@ -25,7 +25,7 @@ The compiled document is centralized at `output/pdf/pcl_assortment.pdf`.
 ## Verify
 
 ```bash
-python3 problems/03_pcl_assortment/solve_pcl_structured.py --verify
+python3 problems/02_pcl_assortment/solve_pcl_structured.py --verify
 ```
 
 The `--verify` mode requires a Python interpreter with `gurobipy`. It proves the Gurobi solution is optimal and asserts that its decision, objective, bound, and direct probability recomputation agree with complete enumeration.
@@ -33,7 +33,7 @@ The `--verify` mode requires a Python interpreter with `gurobipy`. It proves the
 The enumeration oracle can also run without Gurobi:
 
 ```bash
-python3 problems/03_pcl_assortment/solve_pcl_structured.py --enumerate-only
+python3 problems/02_pcl_assortment/solve_pcl_structured.py --enumerate-only
 ```
 
 Both verification paths prove uniqueness, check probability normalization and the full-assortment no-purchase probability, recompute the failed decision and its regret, and reproduce the decisions and objectives of both malformed pair-state systems.
