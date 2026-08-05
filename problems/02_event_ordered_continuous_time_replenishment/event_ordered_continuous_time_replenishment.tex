@@ -11,6 +11,7 @@
 \usepackage{titlesec}
 \usepackage{caption}
 \usepackage{fancyhdr}
+\usepackage[authoryear,round]{natbib}
 \usepackage{hyperref}
 \usepackage{url}
 
@@ -40,6 +41,7 @@
   {\thesubsection.}{0.45em}{}
 \titlespacing*{\section}{0pt}{10pt plus 2pt minus 2pt}{3pt}
 \titlespacing*{\subsection}{0pt}{7pt plus 1pt minus 1pt}{2pt}
+
 \makeatletter
 \newcommand{\obshorttitle}{OR-Bench Candidate}
 \newcommand{\shorttitle}[1]{\renewcommand{\obshorttitle}{#1}}
@@ -50,11 +52,14 @@
     {\fontsize{17}{19.5}\selectfont\bfseries\@title\par}
     \vspace{4pt}
     {\small\@author\par}
-    \ifx\@date\@empty\else\vspace{1pt}{\footnotesize\color{orgray}\@date\par}\fi
+    \ifx\@date\@empty\else
+      \vspace{1pt}{\footnotesize\color{orgray}\@date\par}
+    \fi
   \end{center}
   \vspace{4pt}\hrule height 0.55pt\vspace{7pt}
 }
 \makeatother
+
 \pagestyle{fancy}
 \fancyhf{}
 \fancyhead[L]{\scriptsize\color{orgray}\obshorttitle}
@@ -62,20 +67,24 @@
 \fancyfoot[C]{\scriptsize\thepage}
 \renewcommand{\headrulewidth}{0.35pt}
 \renewcommand{\footrulewidth}{0pt}
+
 \fancypagestyle{plain}{
   \fancyhf{}
   \fancyfoot[C]{\scriptsize\thepage}
   \renewcommand{\headrulewidth}{0pt}
 }
+
 \renewenvironment{abstract}{%
   \noindent\begin{minipage}{\linewidth}\small
   \textbf{Abstract.}\hspace{0.35em}%
 }{%
   \end{minipage}\par\vspace{5pt}
 }
+
 \newcommand{\keywords}[1]{%
   \noindent{\small\textbf{Keywords.}\hspace{0.35em}#1}\par\vspace{5pt}
 }
+
 \newenvironment{businessbrief}{%
   \par\vspace{4pt}\noindent
   \begin{minipage}{\linewidth}
@@ -85,17 +94,19 @@
   \par\vspace{4pt}\hrule height 0.4pt
   \end{minipage}\par\vspace{4pt}
 }
+
 \newcommand{\evidencebox}[1]{%
   \par\vspace{3pt}\noindent
   \colorbox{orlight}{%
-    \parbox{\dimexpr\linewidth-2\fboxsep\relax}{\small\textbf{Failure certificate.}\hspace{0.35em}#1}%
+    \parbox{\dimexpr\linewidth-2\fboxsep\relax}{%
+      \small\textbf{Illustrative instance.}\hspace{0.35em}#1%
+    }%
   }\par\vspace{4pt}
 }
-\newcommand{\metainfo}[1]{%
-  \noindent{\footnotesize\color{orgray}#1}\par\vspace{5pt}
-}
+
 \newcolumntype{Y}{>{\raggedright\arraybackslash}X}
 \newcolumntype{R}{>{\raggedleft\arraybackslash}X}
+
 \AtBeginDocument{%
   \setlength{\abovedisplayskip}{6pt plus 2pt minus 2pt}
   \setlength{\belowdisplayskip}{6pt plus 2pt minus 2pt}
@@ -103,111 +114,284 @@
   \setlength{\belowdisplayshortskip}{4pt plus 1pt}
   \setlength{\jot}{2pt}
 }
-\providecommand{\doi}[1]{\href{https://doi.org/#1}{doi:#1}}
 
-\title{Event-Ordered Continuous-Time Tank Replenishment}
+\title{Event Consistency in Continuous-Time Inventory Routing}
 \author{Zhengzhong Ricky You}
-\date{OR-Bench candidate problem \textbullet{} August 2026}
-\shorttitle{Event-Ordered Continuous-Time Replenishment}
+\date{OR-Bench candidate problem, August 2026}
+\shorttitle{Event Consistency in Inventory Routing}
 
 \begin{document}
 \maketitle
 
 \begin{abstract}
-Replenishment plans for fuel, industrial gas, and liquid raw materials must coordinate vehicle routes with inventories that evolve continuously. Repeated visits create the decisive modeling challenge: every delivery must occupy one consistent event order, because tank feasibility depends on the exact set of earlier deliveries. This candidate uses an event-copy MILP and a one-customer analytical witness. A generated continuous-time formulation includes routes, arrival times, quantities, and inventory checks, yet its pairwise precedence variables admit incompatible delivery orders. The model declares four simultaneous deliveries feasible even though their aggregate raises inventory to 105 in a tank capped at 100.
+Continuous-time inventory routing integrates vehicle movements with inventory trajectories that evolve between visits. Repeated replenishments require all inventory constraints to be evaluated with respect to a single order of delivery events. We show that pairwise precedence variables without transitivity can violate this requirement and admit spurious feasible solutions. Using the event-copy model of \citet{wang2025} as the reference, we construct a one-customer instance in which every delivery must occur at time 5. The terminal inventory requirement calls for 20 units of replenishment, whereas the tank can receive at most 15 units at that time. A pairwise-precedence formulation admits four deliveries of five units each, with total travel cost 8, even though the resulting inventory reaches 105 in a tank with capacity 100. The instance isolates event consistency as a necessary condition for valid continuous-time inventory-routing formulations.
 \end{abstract}
-\keywords{continuous-time inventory routing; repeated delivery; event order; tank replenishment; mixed-integer linear programming}
-\metainfo{Form domain: Inventory management \textbullet{} Model: MILP \textbullet{} Exact witness: reference infeasible, generated model optimal}
 
-\section{Business Brief}
+\keywords{continuous-time inventory routing; repeated delivery; event sequencing; tank replenishment; mixed-integer linear programming}
+
+\section{Problem Motivation}
 
 \begin{businessbrief}
-We plan replenishment routes for industrial gas, fuel, or liquid raw material that customers consume continuously. Each customer has an on-site tank: too little inventory interrupts operations, while too much exceeds physical capacity. Every customer must also retain a required reserve at the end of the planning horizon. Vehicles may leave the warehouse and return to reload. Decide when vehicles depart, which customers they visit, and how much they deliver at every visit. Some customers may require multiple deliveries. Minimize travel cost while preventing stockouts and overflow throughout the day.
+A supplier distributes industrial gas, fuel, or liquid raw materials to customers that consume the product continuously. Each customer stores inventory in a tank subject to lower and upper operating limits and a terminal reserve requirement. Vehicles may serve multiple customers, return to the depot to reload, and visit the same customer more than once. The supplier determines vehicle routes, visit times, and delivery quantities to minimize travel cost while maintaining feasible inventory levels throughout the planning horizon.
 \end{businessbrief}
 
-The brief requires decisions in continuous time. A daily aggregate balance cannot certify feasibility because inventory can cross a bound between the start and end of the horizon.
+Initial and terminal inventory balances alone do not establish continuous-time feasibility because inventory may violate an operating limit between these two observations. A valid formulation must therefore explicitly represent delivery times, quantities, and the resulting inventory trajectory. The need for such an explicit representation is central to the continuous-time inventory-routing problem studied by \citet{lagos2020}, which incorporates continuous consumption, capacitated vehicles, repeated customer visits, and multiple depot trips. \citet{wang2025} further introduce terminal inventory targets and develop a compact mixed-integer linear programming formulation based on ordered visit copies, which we adopt as the reference formulation.
 
-\section{Precise Problem}
+The ordered-copy structure becomes essential when a customer receives multiple deliveries. The inventory level at each visit depends on the deliveries completed earlier, so the routing, timing, and inventory constraints must share a common event sequence. Pairwise precedence relations that do not collectively define such a sequence can cause different inventory constraints to rely on incompatible delivery histories, thereby admitting a solution that does not correspond to any feasible physical inventory trajectory.
 
-Let $G=(\{0\}\cup C,E)$ contain depot $0$ and customers $C$ over horizon $[0,H]$. Customer $i$ has initial inventory $I_i^0$, lower and upper bounds $L_i$ and $U_i$, continuous usage rate $\rho_i$, and terminal requirement $F_i$. At most $m$ vehicles of capacity $Q$ travel with arc cost $c_{ij}$ and time $\tau_{ij}$. Vehicles may return to the depot to reload.
 
-For customer $i$, let $R_i$ index potential replenishment events. If copy $\alpha\in R_i$ is active, $a_{i\alpha}$ and $b_{i\alpha}$ are arrival and departure times and $q_{i\alpha}$ is the delivered quantity. The physical trajectory is
-\begin{equation}
-I_i(t)=I_i^0+\sum_{\alpha:b_{i\alpha}\le t}q_{i\alpha}-\rho_i t,
-\qquad t\in[0,H]. \label{eq:trajectory}
-\end{equation}
-Feasibility requires $L_i\le I_i(t)\le U_i$ throughout the horizon and $I_i(H)\ge F_i$.
+\section{Problem Definition}
 
-\section{Independently Derived Event-Copy Formulation}
+Let $G=(V,E)$ be a complete directed network, where $V=\{0\}\cup C$ is the node set, node $0$ represents the depot, and $C$ is the set of customers. The arc set is $E=\{(i,j)\mid i,j\in V,\ i\ne j\}$. Let $[0,H]$ be the planning horizon, where $H>0$. Each customer $i\in C$ has initial inventory $I_i^0$, lower and upper inventory limits $L_i$ and $U_i$, a constant consumption rate $\rho_i>0$, a terminal inventory target $F_i$, and a maximum number of visits $n_i\ge1$. We assume $L_i\le I_i^0\le U_i$, $L_i\le F_i\le U_i$, and $F_i+\rho_iH-I_i^0>0$.
 
-Let $\mathcal N=\{(0,1)\}\cup\{(i,\alpha):i\in C,\alpha\in R_i\}$ and let $\mathcal E^d$ be feasible movement arcs in mode $d\in\{0,1\}$, where mode 1 includes a depot reload; write $\mathcal E=\{(d,i,\alpha,j,\beta):(i,\alpha,j,\beta)\in\mathcal E^d\}$. Binary $x^d_{i\alpha j\beta}$ selects an arc and $y_{i\alpha}$ activates visit copy $\alpha$. Nonnegative $f_{i\alpha j\beta}$ is carried product on a direct arc, $\ell_{i\alpha}$ is a depot reload, and $\widetilde a_{i\alpha j\beta}$ carries the successor arrival time on a selected event arc. The model below is derived directly from the stated route, reload, and inventory rules:
+The depot has unlimited inventory and initially holds $m\ge1$ identical vehicles, each with capacity $Q>0$. A vehicle may complete multiple depot-to-depot trips but must return to the depot by time $H$. Each arc $(i,j)\in E$ has travel cost $c_{ij}\ge0$ and travel time $\tau_{ij}>0$. The cost and travel-time matrices satisfy the directed triangle inequality. Loading at the depot is instantaneous, and waiting incurs no cost.
+
+A vehicle may remain at a customer while dispensing product. Positive-duration visits by different vehicles may not overlap at the same customer. Zero-duration visits may occur at the same clock time, provided that they admit a consistent event order.
+
+For each customer $i\in C$, let $I_i(t)$ denote its inventory at time $t\in[0,H]$. A feasible replenishment plan satisfies $L_i\le I_i(t)\le U_i$ for all $i\in C$ and $t\in[0,H]$, and $I_i(H)\ge F_i$ for all $i\in C$. The objective is to minimize total vehicle travel cost.
+
+\section{Reference Formulation}
+
+We adopt the compact event-copy formulation in Section 3 of \citet{wang2025}. For each customer $i\in C$, let $R_i=\{1,\ldots,n_i\}$ be the set of ordered visit copies. Event node $(i,\alpha)$ represents the $\alpha$th potential visit to customer $i$, where $\alpha\in R_i$. The pair $(0,1)$ denotes the unique depot event node. The set of event nodes is $\mathcal N=\{(0,1)\}\cup\{(i,\alpha)\mid i\in C,\ \alpha\in R_i\}$.
+
+Let $D=\{0,1\}$ denote the set of travel modes. Mode $0$ represents direct travel between two physical locations. Mode $1$ represents travel from a customer to the depot for reloading and then to the next customer. The corresponding event-arc sets are
+\begin{align*}
+\mathcal E^0
+&=
+\{(i,\alpha,j,\beta)
+\mid
+(i,\alpha),(j,\beta)\in\mathcal N,\ i\ne j\},\\
+\mathcal E^1
+&=
+\{(i,\alpha,j,\beta)
+\mid
+i,j\in C,\ \alpha\in R_i,\ \beta\in R_j,\
+i\ne j\text{ or }\alpha<\beta\}.
+\end{align*}
+
+For mode $d\in D$, let $c_{ij}^d$ and $\tau_{ij}^d$ denote the travel cost and time from $i$ to $j$. Direct travel uses $c_{ij}^0=c_{ij}$ and $\tau_{ij}^0=\tau_{ij}$, while depot-reload travel uses $c_{ij}^1=c_{i0}+c_{0j}$ and $\tau_{ij}^1=\tau_{i0}+\tau_{0j}$.
+
+For event node $(i,\alpha)\in\mathcal N$ and mode $d\in D$, define its predecessor and successor sets by
+\begin{align*}
+\delta_d^-(i,\alpha)
+&=
+\{(j,\beta)\in\mathcal N
+\mid
+(j,\beta,i,\alpha)\in\mathcal E^d\},\\
+\delta_d^+(i,\alpha)
+&=
+\{(j,\beta)\in\mathcal N
+\mid
+(i,\alpha,j,\beta)\in\mathcal E^d\}.
+\end{align*}
+
+For every event arc $(i,\alpha,j,\beta)\in\mathcal E^d$, binary variable $x^d_{i\alpha j\beta}$ equals one if that arc is selected in mode $d$ and zero otherwise. For every customer $i\in C$ and copy $\alpha\in R_i$, binary variable $y_{i\alpha}$ equals one if visit copy $(i,\alpha)$ is active.
+
+Nonnegative variables $a_{i\alpha}$ and $b_{i\alpha}$ denote the arrival and departure times of visit copy $(i,\alpha)$, and $q_{i\alpha}$ denotes the quantity delivered during that visit. For each direct event arc $(i,\alpha,j,\beta)\in\mathcal E^0$, variable $f_{i\alpha j\beta}\ge0$ denotes the vehicle load carried on the arc. Variable $\ell_{i\alpha}\ge0$ denotes the quantity loaded at the depot before a mode-1 arrival at event node $(i,\alpha)$.
+
+For each ordered pair of event nodes connected by at least one travel mode, variable $\widetilde a_{i\alpha j\beta}\ge0$ represents the arrival time at successor event node $(j,\beta)$ when the corresponding connection is selected and equals zero otherwise. Let $\underline a_{i\alpha}$ and $\overline a_{i\alpha}$ denote valid lower and upper bounds on the arrival time of visit copy $(i,\alpha)$. We use $\underline a_{i\alpha}=\tau_{0i}$ and $\overline a_{i\alpha}=H-\tau_{i0}$.
+
+The formulation is
 \begin{align}
-\min\quad &\sum_{(d,i,\alpha,j,\beta)\in\mathcal E}c_{ij}^d x^d_{i\alpha j\beta}, \label{eq:obj}\\
-\text{s.t.}\quad
-&\sum_{d}\sum_{(j,\beta)}x^d_{j\beta i\alpha}=y_{i\alpha},\quad
- \sum_{d}\sum_{(j,\beta)}x^d_{i\alpha j\beta}=y_{i\alpha}
-&&\forall i\in C,\alpha\in R_i, \label{eq:degree}\\
-&\sum_{(j,\beta)}x^0_{0,1,j,\beta}\le m, \label{eq:fleet}\\
-&\sum_{(i,\alpha):(i,\alpha,j,\beta)\in\mathcal E^0\cup\mathcal E^1}
-\widetilde a_{i\alpha j\beta}=a_{j\beta}
-&&\forall j\in C,\beta\in R_j, \label{eq:arrivaldef}\\
-&b_{i\alpha}+\sum_d\sum_{(j,\beta)}\tau_{ij}^d x^d_{i\alpha j\beta}
-\le\sum_{(j,\beta)}\widetilde a_{i\alpha j\beta}
-&&\forall i\in C,\alpha\in R_i, \label{eq:time}\\
+\min\quad
+&\sum_{d\in D}
+\sum_{(i,\alpha,j,\beta)\in\mathcal E^d}
+c_{ij}^d x^d_{i\alpha j\beta},
+\label{eq:obj}\\
+\text{subject to}\quad
+&\sum_{d\in D}
+\sum_{(j,\beta)\in\delta_d^-(i,\alpha)}
+x^d_{j\beta i\alpha}
+=
+y_{i\alpha}
+&&\forall i\in C,\ \alpha\in R_i,
+\label{eq:indegree}\\
+&\sum_{d\in D}
+\sum_{(j,\beta)\in\delta_d^+(i,\alpha)}
+x^d_{i\alpha j\beta}
+=
+y_{i\alpha}
+&&\forall i\in C,\ \alpha\in R_i,
+\label{eq:outdegree}\\
+&\sum_{(j,\beta)\in\delta_0^+(0,1)}
+x^0_{0,1,j,\beta}
+\le m,
+\label{eq:fleet}\\
+&\sum_{(i,\alpha)\in\bigcup_{d\in D}\delta_d^-(j,\beta)}
+\widetilde a_{i\alpha j\beta}
+=
+a_{j\beta}
+&&\forall j\in C,\ \beta\in R_j,
+\label{eq:arrivaldef}\\
+&\underline a_{i\alpha}y_{i\alpha}
+\le a_{i\alpha}
+\le \overline a_{i\alpha}y_{i\alpha}
+&&\forall i\in C,\ \alpha\in R_i,
+\label{eq:arrivalbounds}\\
+&a_{i\alpha}\le b_{i\alpha}
+&&\forall i\in C,\ \alpha\in R_i,
+\label{eq:service}\\
+&b_{i\alpha}
++
+\sum_{d\in D}
+\sum_{(j,\beta)\in\delta_d^+(i,\alpha)}
+\tau_{ij}^d x^d_{i\alpha j\beta}
+\le
+\sum_{(j,\beta)\in\bigcup_{d\in D}\delta_d^+(i,\alpha)}
+\widetilde a_{i\alpha j\beta}
+&&\forall i\in C,\ \alpha\in R_i,
+\label{eq:time}\\
 &y_{i,\alpha+1}\le y_{i\alpha}
-&&\forall i,\alpha,\alpha+1\in R_i, \label{eq:activeorder}\\
-&\boxed{b_{i\alpha}\le a_{i,\alpha+1}+(H-\tau_{i0})(y_{i\alpha}-y_{i,\alpha+1})}
-&&\forall i,\alpha,\alpha+1\in R_i. \label{eq:eventorder}
+&&\forall i\in C,\ \alpha=1,\ldots,n_i-1,
+\label{eq:activeorder}\\
+&b_{i\alpha}
+\le
+a_{i,\alpha+1}
++
+(H-\tau_{i0})
+(y_{i\alpha}-y_{i,\alpha+1})
+&&\forall i\in C,\ \alpha=1,\ldots,n_i-1.
+\label{eq:eventorder}
 \end{align}
-Here $\widetilde a$ is bounded by the selected arc and the valid arrival window; for depot-return arcs its upper bound is $H$. These bounds make Eqs.~\eqref{eq:arrivaldef}--\eqref{eq:time} valid without introducing depot arrival or departure variables.
-Product balance and capacity are
+
+Constraints~\eqref{eq:indegree} and \eqref{eq:outdegree} link visit activation to the selected incoming and outgoing event arcs. Constraint~\eqref{eq:fleet} limits the number of vehicles departing from the depot. Constraints~\eqref{eq:arrivaldef}--\eqref{eq:time} propagate arrival times through the selected vehicle itineraries. Constraints~\eqref{eq:activeorder} and \eqref{eq:eventorder} place active copies first and impose their chronological order.
+
+The auxiliary arrival variables satisfy
 \begin{align}
-&\sum_{(i,\alpha)}f_{i\alpha j\beta}+\ell_{j\beta}
-=q_{j\beta}+\sum_{(i,\alpha)}f_{j\beta i\alpha}
-&&\forall j\in C,\beta\in R_j, \label{eq:product}\\
-&0\le f_{i\alpha j\beta}\le Qx^0_{i\alpha j\beta},\quad
-0\le\ell_{j\beta}\le Q\sum_{(i,\alpha)}x^1_{i\alpha j\beta}, \label{eq:capacity}\\
+&\underline a_{j\beta}x^0_{0,1,j,\beta}
+\le
+\widetilde a_{0,1,j,\beta}
+\le
+\overline a_{j\beta}x^0_{0,1,j,\beta}
+&&\forall (0,1,j,\beta)\in\mathcal E^0,
+\label{eq:depotaux}\\
+&0
+\le
+\widetilde a_{i\alpha j\beta}
+\le
+\overline a_{j\beta}
+\sum_{\substack{d\in D\\
+(i,\alpha,j,\beta)\in\mathcal E^d}}
+x^d_{i\alpha j\beta}
+&&\forall
+(i,\alpha,j,\beta)\in\mathcal E^0\cup\mathcal E^1,\
+i,j\in C,
+\label{eq:customeraux}\\
+&0
+\le
+\widetilde a_{i\alpha 0,1}
+\le
+Hx^0_{i\alpha 0,1}
+&&\forall (i,\alpha,0,1)\in\mathcal E^0.
+\label{eq:returnaux}
+\end{align}
+These constraints set each auxiliary arrival variable to zero when the associated event connection is not selected. Together with constraints~\eqref{eq:arrivaldef} and \eqref{eq:time}, they propagate time along each selected route.
+
+The product-flow and vehicle-capacity constraints are
+\begin{align}
+&\sum_{(i,\alpha)\in\delta_0^-(j,\beta)}
+f_{i\alpha j\beta}
++
+\ell_{j\beta}
+=
+q_{j\beta}
++
+\sum_{(i,\alpha)\in\delta_0^+(j,\beta)}
+f_{j\beta i\alpha}
+&&\forall j\in C,\ \beta\in R_j,
+\label{eq:product}\\
+&f_{i\alpha 0,1}=0
+&&\forall (i,\alpha,0,1)\in\mathcal E^0,
+\label{eq:returnempty}\\
+&0\le f_{i\alpha j\beta}
+\le Qx^0_{i\alpha j\beta}
+&&\forall (i,\alpha,j,\beta)\in\mathcal E^0,
+\label{eq:directcapacity}\\
+&0\le\ell_{j\beta}
+\le
+Q
+\sum_{(i,\alpha)\in\delta_1^-(j,\beta)}
+x^1_{i\alpha j\beta}
+&&\forall j\in C,\ \beta\in R_j,
+\label{eq:reloadcapacity}\\
 &0\le q_{i\alpha}\le Qy_{i\alpha}
-&&\forall i\in C,\alpha\in R_i. \label{eq:delivery}
+&&\forall i\in C,\ \alpha\in R_i.
+\label{eq:delivery}
 \end{align}
-Because inventory decreases between deliveries, the lower bound is checked immediately before an event and the upper bound immediately after it:
+
+For the inventory constraints, let $\gamma\in R_i$ index a visit copy of customer $i$. Since inventory decreases continuously between replenishments, the lower inventory limit is enforced upon arrival, immediately before the current delivery. The upper inventory limit is enforced upon departure, after the delivered quantity has entered the tank. When dispensing occurs over the interval $[a_{i\alpha},b_{i\alpha}]$, the inventory trajectory can be maintained between these endpoint levels. The resulting constraints are
 \begin{align}
-&I_i^0y_{i\alpha}+\sum_{\gamma<\alpha}q_{i\gamma}-\rho_i a_{i\alpha}
-\ge L_i y_{i\alpha}, \label{eq:lower}\\
-&I_i^0y_{i\alpha}+\sum_{\gamma\le\alpha}q_{i\gamma}-\rho_i b_{i\alpha}
-\le U_i y_{i\alpha}+Q\sum_{\gamma<\alpha}(y_{i\gamma}-y_{i\alpha}), \label{eq:upper}\\
-&I_i^0+\sum_{\alpha\in R_i}q_{i\alpha}-\rho_iH\ge F_i
-&&\forall i\in C. \label{eq:terminal}
+&I_i^0y_{i\alpha}
++
+\sum_{\substack{\gamma\in R_i\\\gamma<\alpha}}
+q_{i\gamma}
+-
+\rho_i a_{i\alpha}
+\ge
+L_i y_{i\alpha}
+&&\forall i\in C,\ \alpha\in R_i,
+\label{eq:lower}\\
+&I_i^0y_{i\alpha}
++
+\sum_{\substack{\gamma\in R_i\\\gamma\le\alpha}}
+q_{i\gamma}
+-
+\rho_i b_{i\alpha}
+\le
+U_i y_{i\alpha}
++
+Q
+\sum_{\substack{\gamma\in R_i\\\gamma<\alpha}}
+(y_{i\gamma}-y_{i\alpha})
+&&\forall i\in C,\ \alpha\in R_i,
+\label{eq:upper}\\
+&I_i^0
++
+\sum_{\alpha\in R_i}q_{i\alpha}
+-
+\rho_iH
+\ge
+F_i
+&&\forall i\in C.
+\label{eq:terminal}
 \end{align}
-The copy order in~\eqref{eq:eventorder} gives every repeated delivery the same physical history. The route, time, quantity, and inventory states therefore describe one executable plan.
 
-\section{Why the Candidate Is Strong}
+Constraints~\eqref{eq:activeorder} and \eqref{eq:eventorder} impose a common order on the active visit copies. Constraints~\eqref{eq:lower} and \eqref{eq:upper} use that same order when accumulating earlier deliveries. The routing, timing, load, and inventory variables therefore describe a single replenishment plan and a single associated inventory trajectory.
 
-A generated model may introduce a binary $o^i_{ef}$ indicating that delivery event $e$ precedes event $f$ at customer $i$. Pairwise antisymmetry alone does not create a total order: cyclic precedence can make different events see incompatible subsets of prior deliveries. Each upper-bound check can then pass even though no physical inventory trajectory satisfies all checks simultaneously.
+The final term in constraint~\eqref{eq:upper} relaxes the upper-limit constraint when copy $\alpha$ is inactive. Constraint~\eqref{eq:activeorder} places all active copies before inactive copies, ensuring that $y_{i\gamma}-y_{i\alpha}\ge0$ whenever $\gamma<\alpha$.
 
-\evidencebox{Set $H=10$, $I^0=90$, $\rho=1$, $L=0$, $U=100$, and $F=100$. Four vehicles have capacity 5; service time is zero, and each depot--customer leg has time 5 and cost 1. Every visit must occur at $t=5$. The tank can then accept at most 15 units, while the terminal reserve needs 20, so the reference problem is infeasible. The recorded
-\texttt{gpt-5.5-2026-04-23} model returns OPTIMAL with cost 8 and four simultaneous five-unit deliveries. Their true aggregate inventory is $85+20=105>100$.}
+Because each visit delivers at most $Q$, define $k_i=\left\lceil(F_i+\rho_iH-I_i^0)/Q\right\rceil$ as a lower bound on the number of visits required by customer $i$. The instance is infeasible if $k_i>n_i$. Otherwise, the valid fixings $y_{i\alpha}=1$ for all $\alpha=1,\ldots,k_i$ fix the corresponding minimum number of active copies.
 
-The witness isolates formulation correctness from computational performance. Routing, travel time, capacity, and terminal balance all hold. Only event-order consistency separates the false solution from a feasible replenishment plan.
+\section{Failure of Pairwise Event Precedence}
 
-\section{Reproducible Package}
+For each customer $i\in C$, let $\mathcal A_i$ denote the set of active delivery events. For two distinct events $e,f\in\mathcal A_i$, a pairwise formulation may introduce a binary variable $o^i_{ef}$ that equals one when event $e$ precedes event $f$. We write $e\prec f$ whenever $o^i_{ef}=1$.
 
-The package includes the business brief, precise event-copy formulation, Python/Gurobi implementation, exact witness runner, run manifest with content hashes, and a standard-library checker for the complete one-customer certificate. The public witness and solver input are identical, so the intended infeasibility and the generated false-feasible solution can be reproduced from one compact instance.
+Pairwise antisymmetry imposes $o^i_{ef}+o^i_{fe}=1$ for all $i\in C$ and distinct $e,f\in\mathcal A_i$. Pairwise antisymmetry selects one direction for each pair of events but does not impose transitivity. It therefore permits cyclic precedence relations among three or more events.
 
-The business brief, numerical witness, exposition, checker, and solver were written independently for this challenge. The witness is original synthetic data, not a copied or derived benchmark instance. The cited papers provide related-literature context only; no paper text, upstream code, or benchmark archive is redistributed. Code is MIT licensed and the original statement and witness are CC BY 4.0. Public package: \url{https://github.com/Zhengzhong-You/OR-Bench}.
+When inventory constraints identify earlier deliveries through these pairwise variables, each event may be evaluated using a different implied history. The individual upper-limit constraints can then be satisfied even though no common ordering of the deliveries satisfies all of them simultaneously.
+
+For the four deliveries in the illustrative instance, let $\mathcal A=\{0,1,2,3\}$ denote the event set. The selected precedence relations include $0\prec1$, $1\prec2$, and $2\prec0$. These relations form a directed cycle. Consequently, no event has all other deliveries as predecessors, and each upper-limit constraint can omit at least one five-unit delivery.
+
+For any customer $i\in C$ and any three distinct events $e,f,g\in\mathcal A_i$, the transitivity inequalities $o^i_{ef}+o^i_{fg}\le1+o^i_{eg}$ exclude such cycles. Adding these inequalities makes the pairwise-precedence formulation infeasible on the instance considered below.
+
+\evidencebox{Consider a single customer, indexed by 1. Set $H=10$, $I_1^0=90$, $\rho_1=1$, $L_1=0$, $U_1=100$, $F_1=100$, and $n_1=4$. Let $m=4$ vehicles be available, each with capacity $Q=5$. Service time is zero, and the two depot--customer arcs satisfy $\tau_{01}=\tau_{10}=5$ and $c_{01}=c_{10}=1$. Any vehicle completing a depot--customer--depot trip by time $H=10$ must arrive at the customer at time 5. Inventory immediately before delivery is therefore $I_1^0-\rho_1(5)=85$, so the tank can receive at most $U_1-85=15$ units. The terminal constraint requires $I_1^0+\sum_{\alpha\in R_1}q_{1\alpha}-\rho_1H\ge F_1$, and hence requires at least 20 units of replenishment. The event-copy formulation is therefore infeasible. The pairwise-precedence formulation admits four deliveries of five units each at time 5, with total travel cost $8$. Their combined effect raises inventory to $85+20=105>U_1$.}
+
+The four depot--customer--depot trips satisfy the fleet, travel-time, and vehicle-capacity constraints, and the aggregate delivery quantity satisfies the terminal inventory requirement. The event-order representation causes the violation. The pairwise formulation evaluates different inventory constraints against incompatible subsets of earlier deliveries, whereas the event-copy formulation evaluates all visits along one common inventory trajectory.
+
+Supporting materials for the case study, including the data, source document, reference solver, and verification instructions, are available in the \href{https://github.com/Zhengzhong-You/OR-Bench/tree/main/problems/02_event_ordered_continuous_time_replenishment}{corresponding folder of the OR-Bench GitHub repository}.
 
 \begin{thebibliography}{9}\small
-\bibitem{lagos2020}
-F. Lagos, N. Boland, and M. Savelsbergh. 2020.
-The continuous-time inventory-routing problem.
-\emph{Transportation Science} 54(2):375--399.
-\doi{10.1287/trsc.2019.0902}.
 
-\bibitem{wang2025}
-A. Wang, X. Li, J. E. Arbogast, Z. Wilson, and C. E. Gounaris. 2025.
+\bibitem[Lagos et al.(2020)]{lagos2020}
+Lagos F, Boland N, Savelsbergh M (2020)
+The continuous-time inventory-routing problem.
+\emph{Transportation Science} 54(2), 375--399.
+
+\bibitem[Wang et al.(2025)]{wang2025}
+Wang A, Li X, Arbogast JE, Wilson Z, Gounaris CE (2025)
 A novel mixed-integer linear programming formulation for continuous-time inventory routing.
-\emph{Computers \& Operations Research} 174:106883.
-\doi{10.1016/j.cor.2024.106883}.
+\emph{Computers \& Operations Research} 174, 106883.
+
 \end{thebibliography}
 
 \end{document}

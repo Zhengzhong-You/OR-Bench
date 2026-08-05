@@ -27,7 +27,7 @@ Submit **one Google Form response per problem**. Each response uses the same pac
 - Solver upload: `problems/01_cyclic_crossdock_service_network_design/solve_cyclic_crossdock_snd.py`
 - Main files (2): `output/pdf/cyclic_crossdock_service_network_design.pdf`; `problems/01_cyclic_crossdock_service_network_design/instance.csv`
 
-## 2. Event-Ordered Continuous-Time Tank Replenishment
+## 2. Event Consistency in Continuous-Time Inventory Routing
 
 - Form domain: Inventory management
 - Source field: Original synthetic challenge; related literature: https://doi.org/10.1287/trsc.2019.0902 and https://doi.org/10.1016/j.cor.2024.106883

@@ -4,19 +4,21 @@
 Usage:
     python3 solve_ctirp_submission.py instance.csv
 
-Requires Python, Gurobi, and gurobipy. This independently written code is
-released under MIT; related CTIRP literature is cited in the package PDF.
+Requires Python, Gurobi, and gurobipy. The independently written implementation
+is released under MIT; its CTIRP source formulation is cited in the package PDF.
 """
 
 from __future__ import annotations
 
-
-"""Parser for the package's submission-ready CSV instance."""
-
-
+import argparse
 import csv
+import json
 from dataclasses import dataclass
+from math import ceil
 from pathlib import Path
+
+import gurobipy as gp
+from gurobipy import GRB
 
 
 @dataclass(frozen=True)
@@ -27,6 +29,7 @@ class CTIRPCustomer:
     min_inventory: float
     max_inventory: float
     usage_rate: float
+    max_visits: int
 
 
 @dataclass(frozen=True)
@@ -71,6 +74,7 @@ def parse_instance(path: str | Path) -> CTIRPInstance:
             min_inventory=float(row["lower_inventory"]),
             max_inventory=float(row["upper_inventory"]),
             usage_rate=float(row["usage_rate"]),
+            max_visits=int(row["max_visits"]),
         )
         for row in rows
         if row["record_type"] == "customer"
@@ -101,17 +105,6 @@ def parse_instance(path: str | Path) -> CTIRPInstance:
         travel_time=tuple(tuple(row) for row in travel_time),
         travel_cost=tuple(tuple(row) for row in travel_cost),
     )
-
-"""Ordered event-copy MILP derived from the stated business constraints."""
-
-
-from dataclasses import dataclass
-from math import ceil
-
-import gurobipy as gp
-from gurobipy import GRB
-
-
 
 @dataclass
 class CTIRPModelData:
@@ -144,14 +137,13 @@ def build_ctirp_model(
     time_limit: float | None = None,
     mip_gap: float | None = None,
     output_flag: bool = False,
-    tighten_time_windows: bool = True,
     force_min_visits: bool = True,
 ) -> CTIRPModelData:
-    """Build an ordered event-copy CTIRP MILP.
+    """Build the Wang et al. (2025) compact CTIRP MILP, equations (1)-(27).
 
-    Each customer receives enough potential visit copies for its minimum
-    quantity requirement plus two slack copies. Optional valid inequalities
-    tighten the independently implemented formulation.
+    Customer data provide the visit-copy limits n_i assumed by the published
+    formulation. The optional minimum-visit equations implement the valid
+    tightening in Section 4.2 of that paper.
     """
 
     model = gp.Model(f"ctirp_{instance.name}")
@@ -164,13 +156,55 @@ def build_ctirp_model(
     customers = instance.customer_ids
     h = instance.horizon
     q_cap = instance.vehicle_capacity
+    if h <= 0.0:
+        raise ValueError("The planning horizon must be positive")
+    if q_cap <= 0.0:
+        raise ValueError("Vehicle capacity must be positive")
+    if instance.vehicle_count < 0:
+        raise ValueError("Vehicle count must be nonnegative")
+    for customer in instance.customers:
+        if customer.usage_rate < 0.0:
+            raise ValueError(f"Customer {customer.id} has a negative usage rate")
+        if customer.usage_rate == 0.0:
+            raise ValueError(f"Customer {customer.id} must have a positive usage rate")
+        if customer.min_inventory > customer.max_inventory:
+            raise ValueError(f"Customer {customer.id} has inconsistent inventory bounds")
+        if not customer.min_inventory <= customer.initial_inventory <= customer.max_inventory:
+            raise ValueError(f"Customer {customer.id} has initial inventory outside its bounds")
+        if not customer.min_inventory <= customer.final_inventory <= customer.max_inventory:
+            raise ValueError(f"Customer {customer.id} has a terminal target outside its bounds")
+        if customer.max_visits <= 0:
+            raise ValueError(f"Customer {customer.id} must allow at least one visit")
+        if customer.final_inventory + customer.usage_rate * h - customer.initial_inventory <= 0.0:
+            raise ValueError(f"Customer {customer.id} does not require a visit")
+    for i in range(instance.node_count):
+        for j in range(instance.node_count):
+            if instance.travel_cost[i][j] < 0.0:
+                raise ValueError(f"Arc {(i, j)} has a negative travel cost")
+            if i != j and instance.travel_time[i][j] <= 0.0:
+                raise ValueError(f"Arc {(i, j)} must have positive travel time")
+    tolerance = 1e-9
+    for i in range(instance.node_count):
+        for j in range(instance.node_count):
+            for k in range(instance.node_count):
+                if (
+                    instance.travel_time[i][j]
+                    > instance.travel_time[i][k] + instance.travel_time[k][j] + tolerance
+                ):
+                    raise ValueError("Travel times must satisfy the directed triangle inequality")
+                if (
+                    instance.travel_cost[i][j]
+                    > instance.travel_cost[i][k] + instance.travel_cost[k][j] + tolerance
+                ):
+                    raise ValueError("Travel costs must satisfy the directed triangle inequality")
+
     visit_copies: dict[int, list[int]] = {}
     min_visits: dict[int, int] = {}
     for customer in instance.customers:
         theta = customer.final_inventory + customer.usage_rate * h - customer.initial_inventory
         min_visit = max(1, ceil(max(theta, 0.0) / q_cap))
         min_visits[customer.id] = min_visit
-        visit_copies[customer.id] = list(range(1, min_visit + 3))
+        visit_copies[customer.id] = list(range(1, customer.max_visits + 1))
     visit_copies[0] = [1]
 
     nodes = [(i, alpha) for i in [0, *customers] for alpha in visit_copies[i]]
@@ -223,22 +257,8 @@ def build_ctirp_model(
     for customer in instance.customers:
         i = customer.id
         for alpha in visit_copies[i]:
-            if tighten_time_windows:
-                lower = max(
-                    instance.travel_time[0][i],
-                    h - (customer.max_inventory + (len(visit_copies[i]) - alpha) * q_cap - customer.final_inventory)
-                    / customer.usage_rate,
-                )
-                upper = min(
-                    h - instance.travel_time[i][0],
-                    (customer.initial_inventory + (alpha - 1) * q_cap - customer.min_inventory)
-                    / customer.usage_rate,
-                )
-            else:
-                lower = instance.travel_time[0][i]
-                upper = h - instance.travel_time[i][0]
-            window_l[i, alpha] = max(0.0, lower)
-            window_u[i, alpha] = max(0.0, upper)
+            window_l[i, alpha] = instance.travel_time[0][i]
+            window_u[i, alpha] = max(0.0, h - instance.travel_time[i][0])
 
     x = model.addVars(arc_keys, vtype=GRB.BINARY, name="x")
     y = model.addVars(
@@ -327,7 +347,18 @@ def build_ctirp_model(
                 == arrival[j, beta],
                 name=f"eq13_arrival_def[{j},{beta}]",
             )
-            model.addConstr(arrival[j, beta] <= departure[j, beta], name=f"eq13_arr_dep[{j},{beta}]")
+            model.addConstr(
+                arrival[j, beta] <= departure[j, beta],
+                name=f"eq13_arrival_before_departure[{j},{beta}]",
+            )
+            model.addConstr(
+                arrival[j, beta] >= window_l[j, beta] * y[j, beta],
+                name=f"eq13_arrival_window_lb[{j},{beta}]",
+            )
+            model.addConstr(
+                arrival[j, beta] <= window_u[j, beta] * y[j, beta],
+                name=f"eq13_arrival_window_ub[{j},{beta}]",
+            )
     for i in customers:
         for alpha in visit_copies[i]:
             model.addConstr(
@@ -418,13 +449,12 @@ def build_ctirp_model(
             name=f"eq27_final_inventory[{i}]",
         )
 
-    # Tightening constraints (28)-(29) from Section 4.2.
+    # Minimum-visit tightening.
     if force_min_visits:
         for i in customers:
             for alpha in visit_copies[i]:
                 if alpha <= min_visits[i]:
                     model.addConstr(y[i, alpha] == 1, name=f"eq28_min_visit[{i},{alpha}]")
-                    model.addConstr(arrival[i, alpha] >= window_l[i, alpha], name=f"eq29_arrival_lb[{i},{alpha}]")
 
     model.update()
     return CTIRPModelData(
@@ -500,24 +530,11 @@ def _status_name(status: int) -> str:
     }
     return names.get(status, f"STATUS_{status}")
 
-#!/usr/bin/env python3
-"""Solve one CTIRP CSV instance with the ordered event-copy MILP."""
-
-
-import argparse
-import json
-import sys
-from pathlib import Path
-
-
-
-
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("instance", type=Path)
     parser.add_argument("--time-limit", type=float, default=300.0)
     parser.add_argument("--mip-gap", type=float, default=None)
-    parser.add_argument("--no-tight-windows", action="store_true")
     parser.add_argument("--no-min-visit-tightening", action="store_true")
     parser.add_argument("--gurobi-log", action="store_true")
     parser.add_argument("--output", type=Path, default=None)
@@ -534,7 +551,6 @@ def main() -> int:
         time_limit=args.time_limit,
         mip_gap=args.mip_gap,
         output_flag=args.gurobi_log,
-        tighten_time_windows=not args.no_tight_windows,
         force_min_visits=not args.no_min_visit_tightening,
     )
     data.model.optimize()
@@ -562,7 +578,7 @@ def main() -> int:
             customer.initial_inventory - customer.usage_rate * earliest_arrival
         )
         required_delivery = (
-            customer.final_inventory
+            max(customer.final_inventory, customer.min_inventory)
             + customer.usage_rate * instance.horizon
             - customer.initial_inventory
         )
