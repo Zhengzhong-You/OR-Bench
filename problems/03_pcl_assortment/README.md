@@ -1,4 +1,4 @@
-# Limited-Display PCL Assortment Planning
+# Pair-State Consistency in Paired Combinatorial Logit Assortment Planning
 
 A valid paired combinatorial logit model must preserve every state of each pair. In particular, a pair still contributes demand mass when exactly one member is offered; deleting that state changes both probabilities and the optimal assortment.
 
@@ -17,7 +17,7 @@ A valid paired combinatorial logit model must preserve every state of each pair.
 | `README.md` | Navigation, result, evidence, sources, and commands |
 | `business_description.docx` | Business-level description for the Form's dedicated upload |
 | `instance.csv` | Six-product derivative instance with source mapping and complete upstream MIT notice |
-| `solve_pcl_structured.py` | Exact Gurobi MILP plus exhaustive 57-assortment verification |
+| `solve_pcl_structured.py` | Exact Gurobi MILP plus a standard-library enumeration oracle for all 57 feasible assortments and both malformed models |
 | `pcl_assortment.tex` | Self-contained, directly compilable source of the precise problem document |
 
 The compiled document is centralized at `output/pdf/pcl_assortment.pdf`.
@@ -28,7 +28,15 @@ The compiled document is centralized at `output/pdf/pcl_assortment.pdf`.
 python3 problems/03_pcl_assortment/solve_pcl_structured.py --verify
 ```
 
-The built-in enumeration proves uniqueness, recomputes the failed decision under the correct choice probabilities, and reports its regret.
+The `--verify` mode requires a Python interpreter with `gurobipy`. It proves the Gurobi solution is optimal and asserts that its decision, objective, bound, and direct probability recomputation agree with complete enumeration.
+
+The enumeration oracle can also run without Gurobi:
+
+```bash
+python3 problems/03_pcl_assortment/solve_pcl_structured.py --enumerate-only
+```
+
+Both verification paths prove uniqueness, check probability normalization and the full-assortment no-purchase probability, recompute the failed decision and its regret, and reproduce the decisions and objectives of both malformed pair-state systems.
 
 ## Sources and rights
 

@@ -11,6 +11,7 @@
 \usepackage{titlesec}
 \usepackage{caption}
 \usepackage{fancyhdr}
+\usepackage[authoryear,round]{natbib}
 \usepackage{hyperref}
 \usepackage{url}
 
@@ -40,6 +41,7 @@
   {\thesubsection.}{0.45em}{}
 \titlespacing*{\section}{0pt}{10pt plus 2pt minus 2pt}{3pt}
 \titlespacing*{\subsection}{0pt}{7pt plus 1pt minus 1pt}{2pt}
+
 \makeatletter
 \newcommand{\obshorttitle}{OR-Bench Candidate}
 \newcommand{\shorttitle}[1]{\renewcommand{\obshorttitle}{#1}}
@@ -50,11 +52,14 @@
     {\fontsize{17}{19.5}\selectfont\bfseries\@title\par}
     \vspace{4pt}
     {\small\@author\par}
-    \ifx\@date\@empty\else\vspace{1pt}{\footnotesize\color{orgray}\@date\par}\fi
+    \ifx\@date\@empty\else
+      \vspace{1pt}{\footnotesize\color{orgray}\@date\par}
+    \fi
   \end{center}
   \vspace{4pt}\hrule height 0.55pt\vspace{7pt}
 }
 \makeatother
+
 \pagestyle{fancy}
 \fancyhf{}
 \fancyhead[L]{\scriptsize\color{orgray}\obshorttitle}
@@ -62,20 +67,24 @@
 \fancyfoot[C]{\scriptsize\thepage}
 \renewcommand{\headrulewidth}{0.35pt}
 \renewcommand{\footrulewidth}{0pt}
+
 \fancypagestyle{plain}{
   \fancyhf{}
   \fancyfoot[C]{\scriptsize\thepage}
   \renewcommand{\headrulewidth}{0pt}
 }
+
 \renewenvironment{abstract}{%
   \noindent\begin{minipage}{\linewidth}\small
   \textbf{Abstract.}\hspace{0.35em}%
 }{%
   \end{minipage}\par\vspace{5pt}
 }
+
 \newcommand{\keywords}[1]{%
   \noindent{\small\textbf{Keywords.}\hspace{0.35em}#1}\par\vspace{5pt}
 }
+
 \newenvironment{businessbrief}{%
   \par\vspace{4pt}\noindent
   \begin{minipage}{\linewidth}
@@ -85,17 +94,19 @@
   \par\vspace{4pt}\hrule height 0.4pt
   \end{minipage}\par\vspace{4pt}
 }
+
 \newcommand{\evidencebox}[1]{%
   \par\vspace{3pt}\noindent
   \colorbox{orlight}{%
-    \parbox{\dimexpr\linewidth-2\fboxsep\relax}{\small\textbf{Failure certificate.}\hspace{0.35em}#1}%
+    \parbox{\dimexpr\linewidth-2\fboxsep\relax}{%
+      \small\textbf{Illustrative instance.}\hspace{0.35em}#1%
+    }%
   }\par\vspace{4pt}
 }
-\newcommand{\metainfo}[1]{%
-  \noindent{\footnotesize\color{orgray}#1}\par\vspace{5pt}
-}
+
 \newcolumntype{Y}{>{\raggedright\arraybackslash}X}
 \newcolumntype{R}{>{\raggedleft\arraybackslash}X}
+
 \AtBeginDocument{%
   \setlength{\abovedisplayskip}{6pt plus 2pt minus 2pt}
   \setlength{\belowdisplayskip}{6pt plus 2pt minus 2pt}
@@ -103,106 +114,254 @@
   \setlength{\belowdisplayshortskip}{4pt plus 1pt}
   \setlength{\jot}{2pt}
 }
-\providecommand{\doi}[1]{\href{https://doi.org/#1}{doi:#1}}
 
-\title{Limited-Display PCL Assortment Planning}
+\title{Pair-State Consistency in Paired Combinatorial Logit Assortment Planning}
 \author{Zhengzhong Ricky You}
-\date{OR-Bench candidate problem \textbullet{} August 2026}
-\shorttitle{Limited-Display PCL Assortment Planning}
+\date{OR-Bench candidate problem, August 2026}
+\shorttitle{Pair-State Consistency in Assortment Planning}
 
 \begin{document}
 \maketitle
 
 \begin{abstract}
-Retail assortment planning converts a calibrated substitution model into a discrete display decision. Under the paired combinatorial logit model, every unordered product pair remains a choice nest when one or both products are offered. This candidate isolates that semantic requirement in a six-product, cardinality-constrained instance with a structured exact MILP and a complete enumeration oracle. The unique optimal assortment is $\{3,5,6\}$. Two independently generated programs implement different incorrect pair-state systems and both choose $\{2,3,5,6\}$, whose correct expected margin is 11.64\% below optimum. The programs solve successfully; the error lies entirely in translating the calibrated demand model.
+Assortment planning under the paired combinatorial logit (PCL) model couples a display decision with demand substitution across product pairs. When one member of a pair is offered and the other is not, the pair remains active and contributes the attraction weight of the offered product. We examine two incomplete formulations that replace the full pair-state system with either one global singleton term per offered product or terms for jointly offered pairs only. The PCL choice system of \citet{koppelman2000} and the assortment formulation of \citet{zhang2020} provide the reference model. On a six-product instance with a display limit of four, the unique optimal assortment is $\{3,5,6\}$ with expected margin 0.323647238294198. Both incomplete formulations select $\{2,3,5,6\}$. Under the reference model, that assortment has expected margin 0.285975423739680, which is 11.639776\% below optimum. Omitting pair states changes both the choice probabilities and the resulting assortment decision.
 \end{abstract}
-\keywords{assortment optimization; paired combinatorial logit; discrete choice; revenue management; mixed-integer linear programming}
-\metainfo{Form domain: Revenue management and pricing \textbullet{} Model: MILP \textbullet{} Exact oracle: 57 feasible assortments}
 
-\section{Business Brief}
+\keywords{assortment optimization; paired combinatorial logit; discrete choice; revenue management; mixed-integer linear programming}
+
+\section{Problem Motivation}
 
 \begin{businessbrief}
-Our category team must choose up to four products for a limited retail display. For each product, the demand-science team has estimated a customer-attraction weight and a normalized contribution margin. It has also calibrated a standard paired combinatorial logit (PCL) choice model, with a dissimilarity estimate for every unordered product pair and an outside-option weight for customers who leave without purchasing. Choose the assortment that maximizes expected contribution margin while accounting for substitution among the offered products.
+A retailer must choose up to four products for a limited display. The demand science team has estimated an attraction weight and a normalized contribution margin for each product. It has also calibrated a paired combinatorial logit choice model with a dissimilarity parameter for every unordered product pair and an outside-option weight for customers who leave without purchasing. The retailer selects the assortment that maximizes expected contribution margin while accounting for substitution among the displayed products.
 \end{businessbrief}
 
-Naming the calibrated PCL engine makes the business request operationally precise while leaving the probability system and optimization formulation to the modeler.
+A display limit requires the retailer to compare discrete assortments whose products compete for demand. The choice model must therefore map every offered set to the corresponding purchase probabilities before the assortments can be ranked.
 
-\section{PCL Choice System}
+The paired combinatorial logit (PCL) model of \citet{koppelman2000} assigns a separate choice nest to each unordered pair of products. \citet{zhang2020} study assortment optimization under this demand model. We adopt the standard PCL choice system and use an exact linear-fractional reformulation as the reference model.
 
-Let $N$ be the products, $x_i\in\{0,1\}$ indicate whether product $i$ is offered, $v_i>0$ be attraction, $r_i\ge0$ be normalized margin, $v_0>0$ be outside-option weight, and $\gamma_{ij}\in(0,1]$ be pair dissimilarity. For pair $\{i,j\}$, define
+Pairwise demand creates a state-consistency requirement. Each pair contributes differently when only its first product, only its second product, or both products are offered. A formulation that omits or merges these states evaluates an altered demand model and may select a different assortment.
+
+\section{Problem Definition}
+
+Let $n\ge2$ be the number of products, let $N=\{1,\ldots,n\}$ be the product set, and let $\mathcal P=\{(i,j)\in N\times N\mid i<j\}$ be the set of unordered product pairs. The retailer may offer at most $K$ products, where $1\le K\le n$. Let $x=(x_i)_{i\in N}$ be the offer vector. Binary variable $x_i$ equals one when product $i\in N$ is offered and zero otherwise, so a feasible assortment satisfies $\sum_{i\in N}x_i\le K$.
+
+Product $i\in N$ has attraction weight $v_i>0$ and normalized contribution margin $r_i\ge0$. The outside option has attraction weight $v_0>0$. Pair $(i,j)\in\mathcal P$ has dissimilarity parameter $\gamma_{ij}\in(0,1]$. We use one choice nest for each pair in $\mathcal P$, which fixes the scale of $v_0$.
+
+For any feasible assortment $x$, the PCL model determines the purchase probabilities of the offered products and the outside option. The retailer chooses $x$ to maximize the resulting expected contribution margin.
+
+\section{Reference Formulation}
+
+Following \citet{koppelman2000} and \citet{zhang2020}, define the inclusive value of pair $(i,j)\in\mathcal P$ as
+\begin{equation}
+I_{ij}
+=
+\left(
+v_i^{1/\gamma_{ij}}+v_j^{1/\gamma_{ij}}
+\right)^{\gamma_{ij}}.
+\label{eq:nest}
+\end{equation}
+When both products are offered, their contributions to the pair nest are
 \begin{align}
-I_{ij}&=\left(v_i^{1/\gamma_{ij}}+v_j^{1/\gamma_{ij}}\right)^{\gamma_{ij}}, \label{eq:nest}\\
-\mu_{ij}^i&=I_{ij}\frac{v_i^{1/\gamma_{ij}}}{v_i^{1/\gamma_{ij}}+v_j^{1/\gamma_{ij}}},\qquad
-\mu_{ij}^j=I_{ij}-\mu_{ij}^i. \label{eq:mass}
+\mu_{ij}^i
+&=
+I_{ij}
+\frac{v_i^{1/\gamma_{ij}}}
+{v_i^{1/\gamma_{ij}}+v_j^{1/\gamma_{ij}}},
+\label{eq:massI}\\
+\mu_{ij}^j
+&=
+I_{ij}
+\frac{v_j^{1/\gamma_{ij}}}
+{v_i^{1/\gamma_{ij}}+v_j^{1/\gamma_{ij}}}.
+\label{eq:massJ}
 \end{align}
-Use state binaries $y_{ij}^{10}$, $y_{ij}^{01}$, and $y_{ij}^{11}$ for only $i$, only $j$, and both products offered. They satisfy
+
+Let $S=\{10,01,11\}$ be the set of active pair states. For each $(i,j)\in\mathcal P$, binary variables $y_{ij}^{10}$, $y_{ij}^{01}$, and $y_{ij}^{11}$ indicate that only product $i$, only product $j$, or both products are offered. When neither product is offered, all three state variables equal zero.
+
+For state $s\in S$, let $b_{ij}^s$ and $a_{ij}^s$ denote the denominator and expected-margin numerator coefficients. The denominator coefficients are $b_{ij}^{10}=v_i$, $b_{ij}^{01}=v_j$, and $b_{ij}^{11}=I_{ij}$. The numerator coefficients are $a_{ij}^{10}=r_iv_i$, $a_{ij}^{01}=r_jv_j$, and $a_{ij}^{11}=r_i\mu_{ij}^i+r_j\mu_{ij}^j$.
+The PCL denominator and expected-margin numerator are
 \begin{align}
-y_{ij}^{11}&\le x_i,\quad y_{ij}^{11}\le x_j,\quad
-y_{ij}^{11}\ge x_i+x_j-1, \label{eq:and}\\
-y_{ij}^{10}&=x_i-y_{ij}^{11},\qquad
-y_{ij}^{01}=x_j-y_{ij}^{11}. \label{eq:states}
+D(x)
+&=
+v_0+
+\sum_{(i,j)\in\mathcal P}
+\sum_{s\in S}
+b_{ij}^s y_{ij}^s,
+\label{eq:denom}\\
+R(x)
+&=
+\sum_{(i,j)\in\mathcal P}
+\sum_{s\in S}
+a_{ij}^s y_{ij}^s.
+\label{eq:numer}
 \end{align}
-The standard PCL denominator and expected-margin numerator are
+The expected contribution margin is $R(x)/D(x)$. An exactly-one-offered pair contributes $v_i$ or $v_j$ to Eq.~\eqref{eq:denom} and the corresponding margin-weighted term to Eq.~\eqref{eq:numer}. A pair vanishes only when neither product is offered.
+
+We apply the Charnes--Cooper transformation of \citet{charnes1962}. Let $t=1/D(x)$ and $w_{ij}^s=t y_{ij}^s$ for every $(i,j)\in\mathcal P$ and $s\in S$. Define
+\begin{equation}
+\overline D
+=
+v_0+
+\sum_{(i,j)\in\mathcal P}
+\max_{s\in S} b_{ij}^s,
+\qquad
+\underline t=\frac{1}{\overline D},
+\qquad
+\overline t=\frac{1}{v_0}.
+\label{eq:tbounds}
+\end{equation}
+The inequalities $v_0\le D(x)\le\overline D$ imply $0<\underline t\le t\le\overline t$. The resulting mixed-integer linear program is
 \begin{align}
-D(x)&=v_0+\sum_{i<j}\left(v_i y_{ij}^{10}+v_j y_{ij}^{01}+I_{ij}y_{ij}^{11}\right), \label{eq:denom}\\
-R(x)&=\sum_{i<j}\left(r_iv_i y_{ij}^{10}+r_jv_j y_{ij}^{01}
-+(r_i\mu_{ij}^i+r_j\mu_{ij}^j)y_{ij}^{11}\right). \label{eq:numer}
+\max\quad
+&
+\sum_{(i,j)\in\mathcal P}
+\sum_{s\in S}
+a_{ij}^s w_{ij}^s,
+\label{eq:milpobj}\\
+\text{subject to}\quad
+&
+v_0t+
+\sum_{(i,j)\in\mathcal P}
+\sum_{s\in S}
+b_{ij}^s w_{ij}^s
+=
+1,
+\label{eq:normalize}\\
+&
+\sum_{i\in N}x_i\le K,
+\label{eq:cardinality}\\
+&
+y_{ij}^{11}\le x_i,\qquad
+y_{ij}^{11}\le x_j,\qquad
+y_{ij}^{11}\ge x_i+x_j-1
+&&
+\forall (i,j)\in\mathcal P,
+\label{eq:and}\\
+&
+y_{ij}^{10}=x_i-y_{ij}^{11},\qquad
+y_{ij}^{01}=x_j-y_{ij}^{11}
+&&
+\forall (i,j)\in\mathcal P,
+\label{eq:states}\\
+&
+\underline t y_{ij}^s
+\le
+w_{ij}^s
+\le
+\overline t y_{ij}^s
+&&
+\forall (i,j)\in\mathcal P,\ s\in S,
+\label{eq:scaleone}\\
+&
+t-\overline t(1-y_{ij}^s)
+\le
+w_{ij}^s
+\le
+t-\underline t(1-y_{ij}^s)
+&&
+\forall (i,j)\in\mathcal P,\ s\in S,
+\label{eq:scaletwo}\\
+&
+x_i\in\{0,1\}
+&&
+\forall i\in N,
+\label{eq:domainX}\\
+&
+y_{ij}^s\in\{0,1\},\qquad
+w_{ij}^s\ge0
+&&
+\forall (i,j)\in\mathcal P,\ s\in S,
+\label{eq:domainY}\\
+&
+\underline t\le t\le\overline t.
+\label{eq:domainT}
 \end{align}
-The exactly-one-offered states in Eqs.~\eqref{eq:denom}--\eqref{eq:numer} are decisive: a pair vanishes only when neither member is offered.
 
-\section{Structured Exact MILP}
+Constraints~\eqref{eq:and} and \eqref{eq:states} select the unique state of every active pair. Constraints~\eqref{eq:scaleone} and \eqref{eq:scaletwo} impose $w_{ij}^s=t y_{ij}^s$. The normalization in Eq.~\eqref{eq:normalize} converts the fractional objective into the linear objective in Eq.~\eqref{eq:milpobj}. The resulting variables describe one assortment and its associated PCL choice probabilities.
 
-The assortment problem maximizes $R(x)/D(x)$ subject to $\sum_i x_i\le4$. Apply a Charnes--Cooper transformation with $t=1/D(x)$ and $w_{ij}^s=t y_{ij}^s$ for $s\in\{10,01,11\}$. Let $b_{ij}^s$ and $a_{ij}^s$ denote the denominator and numerator coefficients in Eqs.~\eqref{eq:denom} and~\eqref{eq:numer}. Valid bounds $0<\underline t\le t\le\overline t$ follow from $v_0\le D(x)\le\overline D$. The exact MILP is
+\section{Failure of Incomplete Pair States}
+
+Two incomplete formulations replace the three-state system with restricted pair-state representations. Using superscript $\mathrm{SP}$ for singleton plus pair, the first formulation uses
 \begin{align}
-\max\quad &\sum_{i<j}\sum_s a_{ij}^s w_{ij}^s, \label{eq:milpobj}\\
-\text{s.t.}\quad
-&v_0t+\sum_{i<j}\sum_s b_{ij}^s w_{ij}^s=1, \label{eq:normalize}\\
-&\sum_{i\in N}x_i\le4, \quad \text{Eqs.~\eqref{eq:and}--\eqref{eq:states}}, \label{eq:cardinality}\\
-&\underline t y_{ij}^s\le w_{ij}^s\le\overline t y_{ij}^s
-&&\forall i<j,s, \label{eq:scaleone}\\
-&t-\overline t(1-y_{ij}^s)\le w_{ij}^s
-\le t-\underline t(1-y_{ij}^s)
-&&\forall i<j,s, \label{eq:scaletwo}\\
-&x_i,y_{ij}^s\in\{0,1\},\quad t,w_{ij}^s\ge0. \label{eq:domain}
+D^{\mathrm{SP}}(x)
+&=
+v_0+
+\sum_{i\in N}v_i x_i+
+\sum_{(i,j)\in\mathcal P}I_{ij}x_ix_j,
+\label{eq:spDenom}\\
+R^{\mathrm{SP}}(x)
+&=
+\sum_{i\in N}r_iv_i x_i+
+\sum_{(i,j)\in\mathcal P}a_{ij}^{11}x_ix_j.
+\label{eq:spNumer}
 \end{align}
-Constraints~\eqref{eq:scaleone}--\eqref{eq:scaletwo} impose $w_{ij}^s=t y_{ij}^s$. The repository includes this structured Gurobi model and a separate exhaustive oracle over all 57 assortments of size at most four.
+The global singleton term counts each offered product once, while the reference model contributes one exactly-one-offered term for every absent counterpart.
 
-\section{Exact Instance and Failure Certificate}
+Using superscript $\mathrm{JP}$ for jointly offered pairs only, the second formulation uses
+\begin{align}
+D^{\mathrm{JP}}(x)
+&=
+v_0+
+\sum_{(i,j)\in\mathcal P}I_{ij}x_ix_j,
+\label{eq:jpDenom}\\
+R^{\mathrm{JP}}(x)
+&=
+\sum_{(i,j)\in\mathcal P}a_{ij}^{11}x_ix_j.
+\label{eq:jpNumer}
+\end{align}
+Every pair with exactly one offered member disappears from this choice system. Both formulations therefore change the numerator and denominator used to rank assortments.
 
-The six products are derived from the official MIT-licensed correlated synthetic instance of Feng, Che, and Chen~\cite{feng2026}. Product IDs are remapped, and $v_0=3.84538427435401$ preserves a no-purchase probability of 0.25 when all six products are displayed.
+The six-product instance is derived from the computational artifact associated with exact PCL assortment optimization under general linear constraints \citep{feng2026,artifact}. Product IDs are remapped to $N=\{1,\ldots,6\}$, the display limit is $K=4$, and $v_0=3.84538427435401$. The outside-option probability equals 0.25 when all six products are offered. Table~\ref{tab:decisions} compares the exact reference solution with the decisions of the two incomplete formulations.
 
 \begin{center}
-\captionof{table}{Exact optimum and independently generated decisions.}
+\captionof{table}{Assortments selected under the reference and incomplete formulations.}
+\label{tab:decisions}
 \begin{tabularx}{0.94\linewidth}{lY r}
 \toprule
-Model & Selected products & Objective under that model \\
+Formulation & Selected products & Objective under the formulation \\
 \midrule
-Correct standard PCL & $\{3,5,6\}$ & 0.323647238294198 \\
-Generated singleton-plus-pair model & $\{2,3,5,6\}$ & 0.245658160940 \\
-Generated jointly-offered-pairs-only model & $\{2,3,5,6\}$ & 0.188961826760 \\
+Reference PCL formulation & $\{3,5,6\}$ & 0.323647238294198 \\
+Singleton-plus-pair formulation & $\{2,3,5,6\}$ & 0.245658160940 \\
+Jointly-offered-pairs-only formulation & $\{2,3,5,6\}$ & 0.188961826760 \\
 \bottomrule
 \end{tabularx}
 \end{center}
 
-The first generated program adds one global singleton term per selected product, instead of one exactly-one-offered contribution for every absent counterpart. The second retains a pair nest only when both products are offered. Both programs are executable and prove their own MILP optima.
+Each incomplete formulation is solved to optimality under its own objective. The two altered choice systems select the same four-product assortment.
 
-\evidencebox{The correct PCL oracle has the unique optimum $\{3,5,6\}$ with expected margin 0.323647238294198. Both generated programs choose $\{2,3,5,6\}$. Evaluated under the calibrated standard PCL model, that decision is worth 0.285975423739680, giving absolute regret 0.037671814554518 and relative regret 11.639776\%.}
+\evidencebox{The exact mixed-integer linear program and complete enumeration of all 57 feasible assortments identify the unique optimum $\{3,5,6\}$ with expected margin 0.323647238294198. Both incomplete formulations select $\{2,3,5,6\}$. Under the reference PCL model, that assortment has expected margin 0.285975423739680, giving absolute regret 0.037671814554518 and relative regret 11.639776\%.}
 
-\section{Reproducible Package}
+The display-capacity constraint holds for all three decisions. The discrepancy follows from the choice probabilities assigned to exactly-one-offered pairs. Preserving the complete pair-state system is therefore necessary for the optimization model to evaluate the calibrated PCL demand model.
 
-The package contains the exact derivative instance, source-product mapping, structured MILP, standard-library enumeration checker, ground truth, business brief, and upstream MIT notice. The instance embeds the upstream copyright and complete MIT permission notice, so every five-file Form package carries its rights chain. The full-data no-purchase probability, probability sums, objective, bound, and direct recomputation are checked mechanically. Public package: \url{https://github.com/Zhengzhong-You/OR-Bench}.
+Supporting materials for the case study, including the derivative data, source document, reference solver, and verification instructions, are available in the \href{https://github.com/Zhengzhong-You/OR-Bench/tree/main/problems/03_pcl_assortment}{corresponding folder of the OR-Bench GitHub repository}.
 
 \begin{thebibliography}{9}\small
-\bibitem{feng2026}
-J. Feng, A. Che, and Z.-L. Chen. 2026.
+
+\bibitem[Charnes and Cooper(1962)]{charnes1962}
+Charnes A, Cooper WW (1962)
+Programming with linear fractional functionals.
+\emph{Naval Research Logistics Quarterly} 9(3--4), 181--186.
+
+\bibitem[Feng et al.(2026a)]{feng2026}
+Feng J, Che A, Chen ZL (2026a)
 Assortment optimization with general linear constraints under the paired combinatorial logit choice model.
 \emph{INFORMS Journal on Computing}, Articles in Advance.
-\doi{10.1287/ijoc.2024.0830}.
 
-\bibitem{artifact}
-INFORMS Journal on Computing Software and Data Repository. 2026.
-Artifact for Feng, Che, and Chen.
-\doi{10.1287/ijoc.2024.0830.cd}.
+\bibitem[Feng et al.(2026b)]{artifact}
+Feng J, Che A, Chen ZL (2026b)
+Code and data repository for assortment optimization with general linear constraints under the paired combinatorial logit choice model.
+\emph{INFORMS Journal on Computing Software and Data Repository}.
+
+\bibitem[Koppelman and Wen(2000)]{koppelman2000}
+Koppelman FS, Wen CH (2000)
+The paired combinatorial logit model: Properties, estimation and application.
+\emph{Transportation Research Part B: Methodological} 34(2), 75--89.
+
+\bibitem[Zhang et al.(2020)]{zhang2020}
+Zhang H, Rusmevichientong P, Topaloglu H (2020)
+Assortment optimization under the paired combinatorial logit model.
+\emph{Operations Research} 68(3), 741--761.
+
 \end{thebibliography}
 
 \end{document}

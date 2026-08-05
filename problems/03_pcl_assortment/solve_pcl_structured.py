@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Structured exact MILP for the six-product PCL assortment instance."""
+"""Reference solver for pair-state-consistent PCL assortment planning."""
 
 from __future__ import annotations
 
@@ -8,9 +8,6 @@ import csv
 import math
 from itertools import combinations
 from pathlib import Path
-
-import gurobipy as gp
-from gurobipy import GRB
 
 INSTANCE = Path(__file__).with_name("instance.csv")
 STATES = ("10", "01", "11")
@@ -70,15 +67,41 @@ def pcl_metrics(
     return sum(margin[i] * probability[i] for i in assortment), probability, outside
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--verify",
-        action="store_true",
-        help="enumerate all feasible assortments and verify the failure witness",
-    )
-    args = parser.parse_args()
-    data = load_data()
+def malformed_metrics(
+    assortment: frozenset[int], data: dict, *, include_singletons: bool
+) -> float:
+    """Evaluate either malformed pair-state system documented in the case study."""
+    attraction = {row["id"]: row["attraction"] for row in data["products"]}
+    margin = {row["id"]: row["margin"] for row in data["products"]}
+    denominator = data["outside_weight"]
+    numerator = 0.0
+    if include_singletons:
+        denominator += sum(attraction[i] for i in assortment)
+        numerator += sum(margin[i] * attraction[i] for i in assortment)
+    for pair in data["pairwise_dissimilarity"]:
+        i, j, gamma = pair["i"], pair["j"], pair["gamma"]
+        if i not in assortment or j not in assortment:
+            continue
+        vi = math.exp(math.log(attraction[i]) / gamma)
+        vj = math.exp(math.log(attraction[j]) / gamma)
+        nest = math.exp(gamma * math.log(vi + vj))
+        denominator += nest
+        numerator += nest * (
+            margin[i] * vi / (vi + vj) + margin[j] * vj / (vi + vj)
+        )
+    return numerator / denominator
+
+
+def solve_structured_milp(data: dict) -> dict:
+    try:
+        import gurobipy as gp
+        from gurobipy import GRB
+    except ModuleNotFoundError as exc:
+        raise SystemExit(
+            "The structured MILP requires a Python interpreter with gurobipy. "
+            "Use --enumerate-only to run the standard-library oracle without Gurobi."
+        ) from exc
+
     products = tuple(row["id"] for row in data["products"])
     attraction = {row["id"]: row["attraction"] for row in data["products"]}
     margin = {row["id"]: row["margin"] for row in data["products"]}
@@ -165,12 +188,23 @@ def main() -> None:
     )
     model.optimize()
 
+    if model.Status != GRB.OPTIMAL:
+        raise RuntimeError(f"Gurobi did not prove optimality; status={model.Status}")
     chosen = tuple(i for i in products if offer[i].X > 0.5)
     direct, probabilities, outside_probability = pcl_metrics(
         frozenset(chosen), data
     )
-    status = "OPTIMAL" if model.Status == GRB.OPTIMAL else str(model.Status)
-    print(f"STATUS={status}")
+    result = {
+        "status": "OPTIMAL",
+        "objective": model.ObjVal,
+        "bound": model.ObjBound,
+        "gap": model.MIPGap,
+        "chosen": chosen,
+        "probabilities": probabilities,
+        "outside_probability": outside_probability,
+        "direct_objective": direct,
+    }
+    print(f"STATUS={result['status']}")
     print(f"OBJECTIVE={model.ObjVal:.15f}")
     print(f"BOUND={model.ObjBound:.15f}")
     print(f"GAP={model.MIPGap:.15g}")
@@ -180,34 +214,155 @@ def main() -> None:
     print(f"P(OUTSIDE)={outside_probability:.15f}")
     print(f"DIRECT_OBJECTIVE={direct:.15f}")
     print(f"RECOMPUTE_DIFF={abs(model.ObjVal - direct):.3e}")
+    return result
 
-    if args.verify:
-        feasible = [
-            assortment
-            for size in range(data["max_products"] + 1)
-            for assortment in combinations(products, size)
-        ]
-        ranked = sorted(
-            (
-                (pcl_metrics(frozenset(assortment), data)[0], assortment)
-                for assortment in feasible
-            ),
-            reverse=True,
+
+def verify_by_enumeration(data: dict, milp_result: dict | None = None) -> None:
+    products = tuple(row["id"] for row in data["products"])
+    all_assortments = [
+        assortment
+        for size in range(len(products) + 1)
+        for assortment in combinations(products, size)
+    ]
+    feasible = [
+        assortment
+        for assortment in all_assortments
+        if len(assortment) <= data["max_products"]
+    ]
+    ranked = sorted(
+        (
+            (pcl_metrics(frozenset(assortment), data)[0], assortment)
+            for assortment in feasible
+        ),
+        reverse=True,
+    )
+    optimum, optimal = ranked[0]
+    failed_assortment = (2, 3, 5, 6)
+    failed_value = pcl_metrics(frozenset(failed_assortment), data)[0]
+    relative_regret = (optimum - failed_value) / optimum
+
+    probability_error = 0.0
+    for assortment in all_assortments:
+        _, probabilities, outside_probability = pcl_metrics(
+            frozenset(assortment), data
         )
-        optimum, optimal = ranked[0]
-        failed_assortment = (2, 3, 5, 6)
-        failed_value = pcl_metrics(frozenset(failed_assortment), data)[0]
-        relative_regret = (optimum - failed_value) / optimum
-        assert len(feasible) == 57
-        assert optimal == (3, 5, 6)
-        assert optimum > ranked[1][0] + 1e-12
-        assert math.isclose(optimum, 0.323647238294198, abs_tol=1e-12)
-        assert math.isclose(failed_value, 0.285975423739680, abs_tol=1e-12)
-        assert math.isclose(relative_regret, 0.116397763, abs_tol=1e-9)
-        print(f"FAILED_ASSORTMENT={failed_assortment}")
-        print(f"FAILED_TRUE_OBJECTIVE={failed_value:.15f}")
-        print(f"RELATIVE_REGRET={relative_regret:.9%}")
-        print("VERIFICATION=PASS")
+        probability_error = max(
+            probability_error,
+            abs(outside_probability + sum(probabilities.values()) - 1.0),
+        )
+
+    malformed_singleton = sorted(
+        (
+            (
+                malformed_metrics(
+                    frozenset(assortment), data, include_singletons=True
+                ),
+                assortment,
+            )
+            for assortment in feasible
+        ),
+        reverse=True,
+    )[0]
+    malformed_pairs_only = sorted(
+        (
+            (
+                malformed_metrics(
+                    frozenset(assortment), data, include_singletons=False
+                ),
+                assortment,
+            )
+            for assortment in feasible
+        ),
+        reverse=True,
+    )[0]
+
+    assert len(all_assortments) == 64
+    assert len(feasible) == 57
+    assert optimal == (3, 5, 6)
+    assert optimum > ranked[1][0] + 1e-12
+    assert math.isclose(
+        optimum, 0.323647238294198, rel_tol=0.0, abs_tol=1e-12
+    )
+    assert probability_error <= 1e-12
+    assert math.isclose(
+        pcl_metrics(frozenset(products), data)[2],
+        0.25,
+        rel_tol=0.0,
+        abs_tol=1e-12,
+    )
+    assert math.isclose(
+        failed_value, 0.285975423739680, rel_tol=0.0, abs_tol=1e-12
+    )
+    assert math.isclose(
+        relative_regret, 0.116397763, rel_tol=0.0, abs_tol=1e-9
+    )
+    assert malformed_singleton[1] == failed_assortment
+    assert math.isclose(
+        malformed_singleton[0], 0.245658160940, rel_tol=0.0, abs_tol=1e-12
+    )
+    assert malformed_pairs_only[1] == failed_assortment
+    assert math.isclose(
+        malformed_pairs_only[0], 0.188961826760, rel_tol=0.0, abs_tol=1e-12
+    )
+
+    if milp_result is not None:
+        assert milp_result["status"] == "OPTIMAL"
+        assert milp_result["chosen"] == optimal
+        assert math.isclose(
+            milp_result["objective"], optimum, rel_tol=0.0, abs_tol=1e-12
+        )
+        assert math.isclose(
+            milp_result["bound"], optimum, rel_tol=0.0, abs_tol=1e-12
+        )
+        assert math.isclose(
+            milp_result["direct_objective"],
+            optimum,
+            rel_tol=0.0,
+            abs_tol=1e-12,
+        )
+        assert milp_result["gap"] <= 1e-12
+
+    print(f"ENUMERATED_ALL={len(all_assortments)}")
+    print(f"ENUMERATED_FEASIBLE={len(feasible)}")
+    print(f"ENUMERATION_OPTIMAL={optimal}")
+    print(f"ENUMERATION_OBJECTIVE={optimum:.15f}")
+    print(f"UNIQUENESS_GAP={optimum - ranked[1][0]:.15f}")
+    print(f"MAX_PROBABILITY_SUM_ERROR={probability_error:.3e}")
+    print(f"FAILED_ASSORTMENT={failed_assortment}")
+    print(f"FAILED_TRUE_OBJECTIVE={failed_value:.15f}")
+    print(f"RELATIVE_REGRET={relative_regret:.9%}")
+    print(
+        "MALFORMED_SINGLETON_PLUS_PAIR="
+        f"{malformed_singleton[1]}:{malformed_singleton[0]:.15f}"
+    )
+    print(
+        "MALFORMED_JOINT_PAIRS_ONLY="
+        f"{malformed_pairs_only[1]}:{malformed_pairs_only[0]:.15f}"
+    )
+    print("VERIFICATION=PASS")
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser()
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument(
+        "--verify",
+        action="store_true",
+        help="solve the MILP and cross-check it against complete enumeration",
+    )
+    mode.add_argument(
+        "--enumerate-only",
+        action="store_true",
+        help="run the standard-library enumeration oracle without Gurobi",
+    )
+    args = parser.parse_args()
+    data = load_data()
+    if args.enumerate_only:
+        verify_by_enumeration(data)
+        return
+    milp_result = solve_structured_milp(data)
+    if args.verify:
+        verify_by_enumeration(data, milp_result)
 
 
 if __name__ == "__main__":

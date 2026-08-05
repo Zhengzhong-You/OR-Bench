@@ -1,5 +1,5 @@
 record_type,id,i,j,key,value,source_id,attraction,margin,gamma,text
-metadata,,,,title,Limited-Display PCL Assortment Planning,,,,,
+metadata,,,,title,Pair-State Consistency in Paired Combinatorial Logit Assortment Planning,,,,,
 metadata,,,,max_products,4,,,,,
 metadata,,,,outside_weight,3.84538427435401,,,,,
 source,,,,paper_doi,https://doi.org/10.1287/ijoc.2024.0830,,,,,

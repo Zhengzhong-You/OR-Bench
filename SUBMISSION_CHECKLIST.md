@@ -14,7 +14,7 @@ Submit **one Google Form response per problem**. Each response uses the same pac
 
 - Name: Zhengzhong Ricky You
 - Email: enter the address shown by the signed-in Google account
-- Affiliation: University of Florida
+- Affiliation: Tsinghua University
 - Model type: Mixed-integer linear program
 - Rights: select the confirmation checkbox; the package-level source and license review is complete
 - Co-authorship interest: Yes
@@ -35,10 +35,10 @@ Submit **one Google Form response per problem**. Each response uses the same pac
 - Solver upload: `problems/02_event_ordered_continuous_time_replenishment/solve_ctirp_submission.py`
 - Main files (2): `output/pdf/event_ordered_continuous_time_replenishment.pdf`; `problems/02_event_ordered_continuous_time_replenishment/instance.csv`
 
-## 3. Limited-Display PCL Assortment Planning
+## 3. Pair-State Consistency in Paired Combinatorial Logit Assortment Planning
 
 - Form domain: Revenue management and pricing
-- Source field: Paper https://doi.org/10.1287/ijoc.2024.0830; MIT-licensed data artifact https://doi.org/10.1287/ijoc.2024.0830.cd; repository https://github.com/INFORMSJoC/2024.0830; commit a3920679d4725ec714af29d24034a5d6d9db6b8f
+- Source field: Adapted from Feng, Che, and Chen (2026), https://doi.org/10.1287/ijoc.2024.0830. The six-product synthetic instance is derived from the corresponding MIT-licensed code and data repository, https://doi.org/10.1287/ijoc.2024.0830.cd; https://github.com/INFORMSJoC/2024.0830 at commit a3920679d4725ec714af29d24034a5d6d9db6b8f.
 - Business upload: `problems/03_pcl_assortment/business_description.docx`
 - Solver upload: `problems/03_pcl_assortment/solve_pcl_structured.py`
 - Main files (2): `output/pdf/pcl_assortment.pdf`; `problems/03_pcl_assortment/instance.csv` (contains the complete upstream MIT notice)

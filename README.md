@@ -12,7 +12,7 @@ Recommended submission order is CTIRP, PCL, then SND. The first two are the high
 |---|---|---|---|---|
 | [Cyclic Freight Service Design with Cross-Dock Handling](problems/01_cyclic_crossdock_service_network_design/) | Supply chain and logistics | MILP | One full model duplicates destination demand and reports infeasible; two smaller models undercount the periodic fleet | Explicit `F4,R4` solution costs 15; smaller-model decision 11.5 needs three tractors |
 | [Event Consistency in Continuous-Time Inventory Routing](problems/02_event_ordered_continuous_time_replenishment/) | Inventory management | MILP | Pairwise precedence permits incompatible histories for repeated deliveries | Generated plan reaches inventory 105 in a tank capped at 100 |
-| [Limited-Display PCL Assortment Planning](problems/03_pcl_assortment/) | Revenue management and pricing | MILP | Deletes or collapses exactly-one-offered PCL pair states | Both generated models select an assortment with 11.639776% true regret |
+| [Pair-State Consistency in Paired Combinatorial Logit Assortment Planning](problems/03_pcl_assortment/) | Revenue management and pricing | MILP | Deletes or collapses exactly-one-offered PCL pair states | Both generated models select an assortment with 11.639776% true regret |
 
 ## Common Submission Contract
 
