@@ -1,38 +1,41 @@
 # Event Consistency in Continuous-Time Inventory Routing
 
-Repeated deliveries must form one physically consistent inventory trajectory. Pairwise precedence variables can describe incompatible histories unless the visits are placed in a genuine event order.
+Repeated deliveries must define one physically consistent inventory trajectory. Pairwise precedence variables can describe incompatible delivery histories unless all visits belong to a common event order.
 
-| Submission fact | Value |
+## Summary
+
+| Property | Value |
 |---|---|
-| Google Form domain | Inventory management |
+| Domain | Inventory routing |
 | Model type | Mixed-integer linear program |
-| Source | Original synthetic witness; reference formulation adapted from [Wang et al. (2025)](https://doi.org/10.1016/j.cor.2024.106883), with CTIRP context from [Lagos et al. (2020)](https://doi.org/10.1287/trsc.2019.0902) |
-| Ground truth | Infeasible: the required delivery is `20`, but only `15` can enter without overflow |
-| Observed failure | A generated formulation reports an optimum by crediting four simultaneous deliveries separately; aggregate inventory becomes `105 > 100` |
+| Reference formulation | [Wang et al. (2025)](https://doi.org/10.1016/j.cor.2024.106883), with continuous-time inventory-routing context from [Lagos et al. (2020)](https://doi.org/10.1287/trsc.2019.0902) |
+| Instance | Original one-customer synthetic example |
+| Verified result | Infeasible because the required delivery is `20`, while at most `15` units can enter without exceeding tank capacity |
+| Inconsistent-formulation result | Four simultaneous deliveries of five units appear feasible when evaluated against incompatible histories, although aggregate inventory reaches `105 > 100` |
 
-## The five files
+## Files
 
 | File | Purpose |
 |---|---|
-| `README.md` | Navigation, result, evidence, sources, and commands |
-| `business_description.docx` | Business-level description for the Form's dedicated upload |
-| `instance.csv` | Original one-customer false-feasibility witness |
-| `solve_ctirp_submission.py` | Self-contained event-copy Gurobi MILP plus analytic verification |
-| `event_ordered_continuous_time_replenishment.tex` | Self-contained, directly compilable source of the precise problem document |
+| `README.md` | Case overview and reproduction instructions |
+| `business_description.docx` | Business-level problem description |
+| `instance.csv` | One-customer false-feasibility instance |
+| `solve_ctirp_submission.py` | Event-copy Gurobi MILP and analytic verification |
+| `event_ordered_continuous_time_replenishment.tex` | Self-contained source of the precise problem statement |
 
-The compiled document is centralized at `output/pdf/event_ordered_continuous_time_replenishment.pdf`.
+The compiled problem statement is available at [`../../output/pdf/event_ordered_continuous_time_replenishment.pdf`](../../output/pdf/event_ordered_continuous_time_replenishment.pdf).
 
-## Verify
+## Reproduce the Result
 
 ```bash
 python3 problems/01_event_ordered_continuous_time_replenishment/solve_ctirp_submission.py \
   problems/01_event_ordered_continuous_time_replenishment/instance.csv --verify
 ```
 
-The solver returns `INFEASIBLE`; its built-in certificate independently checks that all visits are forced to time 5 and that the required delivery exceeds safe tank capacity.
+The command solves the reference model and returns `INFEASIBLE`. The built-in analytic check independently verifies that every visit is forced to time 5 and that the required delivery exceeds the available tank capacity.
 
-## Sources and rights
+## Sources and Licensing
 
-The reference MILP and its implementation are adapted from the mathematical formulation of [Wang et al. (2025)](https://doi.org/10.1016/j.cor.2024.106883). The implementation is independently written from the published equations. [Lagos, Boland, and Savelsbergh (2020)](https://doi.org/10.1287/trsc.2019.0902) provide the original continuous-time inventory-routing context. The numerical witness and checker were developed for this challenge. No benchmark data, paper text, or upstream source code is redistributed. New code is MIT licensed, and the original statement and data are CC BY 4.0.
+The reference MILP and its implementation are based on the mathematical formulation of [Wang et al. (2025)](https://doi.org/10.1016/j.cor.2024.106883). The implementation was written independently from the published equations. [Lagos, Boland, and Savelsbergh (2020)](https://doi.org/10.1287/trsc.2019.0902) provide the continuous-time inventory-routing context. No paper text, benchmark data, or upstream source code is redistributed.
 
-Public package: https://github.com/Zhengzhong-You/OR-Bench
+New code is MIT licensed. The original problem statement and data are CC BY 4.0.
